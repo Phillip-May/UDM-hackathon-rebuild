@@ -1,5 +1,11 @@
 package ca.umontreal.iro.hackathon.loderunner;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+import javax.lang.model.element.Element;
+
 /**
  *
  */
@@ -32,10 +38,10 @@ public class Runner extends BasicRunner {
     //Needs to have all coins but one
     //Used in the pathfinding algorythm.
     int lst_CoinOrder[];
-    
+    int num_FactPos = 0;
     
     //Room name
-    public static final String ROOM = "Main8";
+    public static final String ROOM = "Main48";
     public static final int START_LEVEL = 1;
 
     
@@ -169,27 +175,18 @@ public class Runner extends BasicRunner {
         
         return 0;
     }    
-
+    
+    //Calculates a factoraial without recursion
     public static int GetFactorial(int input){  
      int i,fact=1;  
      int number=input;//It is the number to calculate factorial    
      for(i=1;i<=number;i++){    
          fact=fact*i;    
      }    
-     System.out.println("Factorial of "+number+" is: "+fact);
      return fact;
     }
-    
-//The algorythm for generating all the possible combinations on an array.
-public int factorial(int n){
-    int result;
-    if(n==0 || n==1){
-        return 1;
-    }
-    
-    result = factorial(n-1) * n;
-    return result;
-    }
+
+
     
     //This sorts the coin by the most efficient way to grab them all
     //I kind of forgot to take the door into account whoops.
@@ -210,7 +207,7 @@ public int factorial(int n){
         
         //Temporary for debugging
         //lst_CoinOrder = new int[num_coincount];
-        lst_CoinOrder = new int[6];
+        lst_CoinOrder = new int[5];
 
         
         //Local variable for current position during calculation
@@ -248,15 +245,19 @@ public int factorial(int n){
         lst_CoinOrder[2] = 30;
         lst_CoinOrder[3] = 40;
         lst_CoinOrder[4] = 50;
-        lst_CoinOrder[5] = 60;
-        
-        
+        //lst_CoinOrder[5] = 60;
         //Calculate all combination that need to be tested
         //Object[] elements = new Object[] {1,2,3,4,5};
         //Object[] elements = new Object[] xpt_CoinXPos[];
         //No need to -1 because it starts from 1 not 0 like my other counters.
-        int aa = factorial(10);
-        System.out.println("Factorail 10:"+aa);
+        //Cast array to arraylist
+        List<Integer> tempbetween = Arrays.stream(lst_CoinOrder).boxed().collect(Collectors.toList());
+        ArrayList<Integer> Input = new ArrayList<Integer>(tempbetween);
+        ArrayList<ArrayList<Integer>> allPermutations = new ArrayList<ArrayList<Integer>>();
+        List<Integer> Permutations;
+        
+        CombinationFinder.enumerate(Input,5,5,allPermutations);
+        
         
         //Outer loop to iterate the calculation so current coin checks the next
         //coin in the list.
