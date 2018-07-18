@@ -1,400 +1,307 @@
 package ca.umontreal.iro.hackathon.loderunner;
 
-import java.lang.Math;
-import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 /**
  *
  */
 public class Runner extends BasicRunner {
+    //Symbolic constants
+    private static final int UP = 1;
+    private static final int LEFT = 2;
+    private static final int DOWN = 3;
+    private static final int RIGHT = 4;
+    //Variables
+    //Local version of the map
+    String[] map_maplocal;      
+    //Array of moves to win
+    int num_listofmoves[] = {LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT};
+    //Position in array of moves, can be reset if moves are recalculated
+    int num_movespos = 0;
+    //Arrays of coordinates
+    //Contains a list of x,y coordinates of where the coins are located.
+    //The number of coins depends on the level.
+    int num_coincount = 0;
+    int[] xpt_CoinXPos = new int[20];
+    int[] ypt_CoinYPos = new int[20];
+    //Player X and Y coordinates
+    int num_PlayerX = 0;
+    int num_PlayerY = 0;
+    //Door X and Y coordinates
+    int num_DoorX = 0;
+    int num_DoorY = 0;
+    //List for testing combinations
+    //Needs to have all coins but one
+    //Used in the pathfinding algorythm.
+    int lst_CoinOrder[];
+    
+    
+    //Room name
+    public static final String ROOM = "Main8";
+    public static final int START_LEVEL = 1;
 
-    // TODO : Remplacer ceci par votre clé secrète
-    public static final String ROOM = "PhillipAI15";
-
-    /* Utilisez cette variable pour choisir le niveau de départ
-     *
-     * Notez: le niveau de départ sera 1 pour tout
-     * le monde pendant la compétition :v)
-     */
-    //#define is now 4 words and has a type
-    public static final int START_LEVEL = 2;
-    public static final int UP          = 1;
-    public static final int LEFT        = 2;
-    public static final int DOWN        = 3;
-    public static final int RIGHT       = 4;
     
-    //My variables
-    public int num_direction;
-    public int num_countermoves;
-    public int num_level = (START_LEVEL-1);
-    public int map_height;
-    public int map_length;
-    public String[] lcl_grid = new String[500];
-    public int[] coinxpos = new int[500];
-    public int[] coinypos = new int[500];
-    public int[] brickxpos = new int[500];
-    public int[] brickypos = new int[500];
-    public int[] ladderxpos = new int[500];
-    public int[] ladderypos = new int[500];
-    public int[] ropexpos = new int[500];
-    public int[] ropeypos = new int[500];
-    public int exitxpos;
-    public int exitypos;
-    public int playerxpos;
-    public int playerypos;
-    public int num_totalcoin;
-    public Boolean obtainedallcoin = false;
-    //level 2 and 3 variables
-    Boolean seekawaycoin = false;
-    Boolean seektowardcoin = false;
-    Boolean climbladder   = false;
-    Boolean reachladder   = false;
-    
-    
-    public int height;
-    public int length;    
-    public ArrayList<Integer> coinX = new ArrayList();
-    public ArrayList<Integer> coinY = new ArrayList();
-    public ArrayList<Integer> distances = new ArrayList();
-    public int posLadderX;//h
-    public int posLadderY;//h
-//    public int posSpaceX;//escpace
-//    public int posSpaceY;//escpace
-//    public int posBrickX;//#
-//    public int posBrickY;//#
-//    public int posBlock;//@
-    public int posRope;//-
-    public int posExitX;//S
-    public int posExitY;//S
-    public int posRunner;
-    
-    public char[][] myGrid = new char[height][length];
-
     public Runner() {
         super(ROOM, START_LEVEL);
     }
 
     @Override
     public void start(String[] grid) {
-        //System.out.println("Nouveau niveau ! Grille initiale reçue :");
-        //Variable reseting betwen levels
-        map_height = grid.length;
-        map_length = grid[0].length();
-        obtainedallcoin = false;
-        num_countermoves = (START_LEVEL-1);
-        seekawaycoin = false;
-        seektowardcoin = false;
-        climbladder   = false;
-        reachladder   = false;
+        System.out.println("Nouveau niveau ! Grille initiale reçue :");
+        //First thing is to copy/save array so that it can used and modified
+        map_maplocal = grid.clone();
+        num_movespos = 0;        
+        
+        PathFind();
+        
+        for (int i=0; i<map_maplocal.length; i++) {
+            String ligne = map_maplocal[i];
 
-        
-        
-        for (int i=0; i<grid.length; i++) {
-            String ligne = grid[i];
-            lcl_grid[i]  = grid[i];
-            map_height   = i + 1;
-            System.out.println(lcl_grid[i]);
+            System.out.println(ligne);
         }
-        System.out.println(map_height);
-        
-        scanMap();
-        
+    }
 
-        
-        
-        
-        //Setup code
-        num_level = num_level + 1;
-                        
-        
-    }  
-    
-    
     @Override
-    public Move next(int x, int y) 
-    {
-        System.out.println("Position du runner :" + x + y);
-        //System.out.println("Current switchcase value; " + num_level);
+    public Move next(int x, int y) {
         
-        //Refresh x and y position
-        playerxpos = x;
-        //Main code to run everytime a new move is possible
-        //Main code
-        switch (num_level)
-        {
-            case 1:
-            LEVEL1();
-            break;
-            
-            case 2:
-            LEVEL2();
-            break;
-            
-            default:
-                System.out.println("Job done");
-            
-            break;
-        }
-                
         
-        switch (num_direction)
-        {
-            case UP:
-                playerypos = playerypos + 1;
-                break;
-            case DOWN:
-                playerypos = playerypos - 1;
-                break;    
-        }
+        System.out.println("Position du runner : (" + x + ", " + y + ")");
         
-        Direction dir = Direction.fromInt(num_direction);                 
+        Direction dir = Direction.fromInt(num_listofmoves[num_movespos]);
+        num_movespos++;
         return new Move(Event.MOVE, dir);
     }
-
-    public void LEVEL1()
-    {
-        
-        if (( ((0 +playerxpos) < coinFarFromDoorX() )&& (obtainedallcoin == false)))
-        {
-            num_direction = RIGHT;
-        }
-        else if (0 + (playerxpos) > coinFarFromDoorX() && (obtainedallcoin == false) )
-        {
-            num_direction = LEFT;
-        }
-        else if ( (playerxpos) == coinFarFromDoorX() && (obtainedallcoin == false) )
-        {
-            obtainedallcoin = true;
-        }
-        if (obtainedallcoin == true)
-        {
-            if (playerxpos >= exitxpos)
-            {
-                num_direction = LEFT;
-            }
-            else if (playerxpos < exitxpos)
-            {
-                num_direction = RIGHT;
-            }
-        }
-
-        //
-        //System.out.println("Coin far from door x " + coinFarFromDoorX());
-        //System.out.println("Exit x " + exitxpos);       
-    }
-
     
-    
-    public int scanMap()
-    {
-        //Local variables
-        String cur_line;
-        char cur_char;
-        int k_coin = 0;
-        int k_brick = 0;
-        int k_ladder = 0;
-        int k_rope = 0;
-        int scanlinex = 0;
-        int scanliney = 0;
-                  
+    public int PathFind() {
+        GetCoinCoords();
+        GetPlayerCoords();
+        GetDoorCoords();
+        //Calculate best order to get coins
+        //This sorts the array so that the best coin to get first is on top.
         
-        for (int i=0; i<map_height; i++) {
-            cur_line = lcl_grid[i];
-            
-            for (int j=0; j<map_length; j++)
-            {
-                
-                cur_char = cur_line.charAt(j);
-                //Scanning individual characters as of here
-                if (cur_char == '$')
-                {
-                    //System.out.println("Coin x value: " + scanlinex);
-                    //System.out.println("Coin y value: " + scanliney);
-                    coinxpos[k_coin] = scanlinex;
-                    coinypos[k_coin] = scanliney;
-                    num_totalcoin = k_coin;
-                    k_coin++;
-                }
-                else if (cur_char == '@')
-                {
-                    brickxpos[k_brick] = scanlinex;
-                    brickypos[k_brick] = scanliney;
-                    k_brick++;                
-                }
-                else if (cur_char == 'H')
-                {
-                    ladderxpos[k_ladder] = scanlinex;
-                    ladderypos[k_ladder] = scanliney;
-                    k_ladder++;
-                }
-                else if (cur_char == '-')
-                {
-                    ropexpos[k_rope] = scanlinex;
-                    ropeypos[k_rope] = scanliney;
-                    k_rope++;
-                }
-                else if (cur_char == 'S')
-                {
-                    exitxpos = scanlinex;
-                    exitypos = scanliney;
-                }
-                else if (cur_char == '&')
-                {
-                    playerxpos = scanlinex;
-                    playerypos = scanliney;
-                }
-                scanlinex = scanlinex + 1;
-            }
-            scanlinex = 0;
-            scanliney = scanliney + 1;
-        }      
+        //Rigging of numbers for the sake of testing
+        num_PlayerX = 12;
+        num_PlayerY = 5;
+        num_DoorX = 20;
+        num_DoorY = 5;        
+        xpt_CoinXPos[0] = 12;
+        ypt_CoinYPos[0] = 5;        
+        xpt_CoinXPos[1] = 6;
+        ypt_CoinYPos[1] = 5;        
+        xpt_CoinXPos[2] = 3;
+        ypt_CoinYPos[2] = 5;        
+        
+        
+        
+        SortCoinList();
+        
+        
         return 0;
     }
     
-    public int coinFarFromDoorX()
-    {
-        int ret_coinxpos;
-        ret_coinxpos = coinxpos[0];
+    
+    public int GetCoinCoords() {
+        num_coincount = 0;
+        //Populates teh array called pts_CoinCoords
+        //Debug prints
         
-        for (int i = 0; i<(num_totalcoin+1); i++)
-        {
-            if ( (Math.abs(coinxpos[i] - exitxpos) > (Math.abs(ret_coinxpos - exitxpos)) ) && (coinxpos[i] != 0) )
-            {
-                ret_coinxpos = coinxpos[i];
-            }
-        //System.out.println("Coin being analysed " + coinxpos[i]);  
-        //System.out.println("Current winner " + ret_coinxpos);  
-        
-        }
-        
-        //System.out.println("Subrtoutine coin x: " + ret_coinxpos); 
-        
-        return (ret_coinxpos);
-    }
- 
-    public void LEVEL2()
-    {
-        System.out.println("PART 2 running"); 
-        //find all coins on current level
-        //    Boolean seekawaycoin = false;
-        //    Boolean seektowardcoin = false;
-        //    Boolean climbladder   = false;
-        //    Boolean reachladder   = false;
-        //if door position is greater than 8 go right else left
-        //Just invert direction as solution for left right mirror
-        
-        System.out.println("First boolean" + seekawaycoin);
-        System.out.println("Second boolean" + seektowardcoin);
-        System.out.println("Climb Ladder boolean" + climbladder);
-        System.out.println("Reach ladder boolean" + reachladder);        
-        System.out.println("Player Y" + playerypos);
-        System.out.println("Coin 2 Y" + coinypos[2]);        
-        System.out.println("Coin 1 Y" + coinypos[1]);        
-        System.out.println("Coin 0 Y" + coinypos[0]);      
-        System.out.println("Top ladder Y" + ladderypos[0]);
-        
-        
-        //Check x away from ladder
-        if (seekawaycoin == false)
-        {
-         if ((coinypos[2] == playerypos))
-         {
-             num_direction = LEFT;            
-             if (coinxpos[2] == playerxpos)
-             {
-                 seekawaycoin = true;
-             }
-             if (coinxpos[2] < playerxpos)
-             {
-                 num_direction = RIGHT;
-             }
-             else 
-             {
-                 num_direction = LEFT;
-             }
-             
-         }
-         else
-         {
-             seekawaycoin = true;
-         }
-        }
-        else if (seektowardcoin == false)
-        {
-            if ((coinypos[1] == playerypos))
-            {
-                num_direction = RIGHT;
-                if ((coinypos[1] == playerxpos))
-                {
-                    seektowardcoin = true;
+        for (int i=0; i<map_maplocal.length; i++) {
+            String str_line = map_maplocal[i];
+            for (int j = 0; j < str_line.length(); j++){
+                int cur_char = str_line.charAt(j);
+                if (cur_char == '$') {
+                    xpt_CoinXPos[num_coincount] = j;
+                    ypt_CoinYPos[num_coincount] = i;
+                    num_coincount++;
                 }
             }
-            else
-            {
-                seektowardcoin = true;
-            }
+            System.out.println(str_line);
         }
-        else if (reachladder == false)
-        {             
-             if (ladderxpos[1] < playerxpos)
-             {
-                 num_direction = RIGHT;
-             }
-             else if (ladderxpos[1] > playerxpos)
-             {
-                 num_direction = LEFT;
-             }
-             else
-             {
-                 reachladder = true;
-             }
-        }
-
-        else if ((climbladder == false))
-        {
-            num_direction = UP;
-        }
-        else if ( (playerxpos == ladderxpos[1]) && (climbladder == false) && (playerypos >= ladderypos[0]))
-        {
-            climbladder = true;
-        }
-        //Go up ladder and go towards door
-        else if ( (playerxpos != ladderxpos[1]) && (climbladder == false) )
-        {
-            if (playerxpos < ladderxpos[1])
-            {
-            num_direction = RIGHT; //Towards ladder
-            }
-            else
-            {
-               num_direction = LEFT; 
-            }
-        }        
-        else if (climbladder == true)
-        {
-            num_direction = LEFT;
-        }
+        //Decrement coint count so it reflects the number of coins found.
+        num_coincount--;
+        System.out.println("X and y coordinates of coins");
+        System.out.println("X coords");
+        System.out.println(java.util.Arrays.toString(xpt_CoinXPos));
+        System.out.println("Y Coords");
+        System.out.println(java.util.Arrays.toString(ypt_CoinYPos));
         
-        //Rescan player position
-        
-        //Direction reverse code
-        if (exitxpos > 8)
-        {
-            if (num_direction == LEFT)
-            {
-                num_direction = RIGHT;
-                playerxpos = playerxpos - 1;
-            }
-            else if (num_direction == RIGHT)
-            {
-                num_direction = LEFT;
-                playerxpos = playerxpos + 1;
-            }
-        }
-        
+        return 0;
     }    
+
+    public int GetPlayerCoords() {
+
+        for (int i=0; i<map_maplocal.length; i++) {
+            String str_line = map_maplocal[i];
+            for (int j = 0; j < str_line.length(); j++){
+                int cur_char = str_line.charAt(j);
+                if (cur_char == '&') {
+                    num_PlayerX = j;
+                    num_PlayerY = i;
+                }
+            }
+            System.out.println(str_line);
+        }         
+        System.out.println("X and y coordinates of player");
+        System.out.println("X coords");
+        System.out.println(num_PlayerX);
+        System.out.println("Y Coords");
+        System.out.println(num_PlayerY);
+        
+        return 0;
+    }
     
+    public int GetDoorCoords() {
+
+        for (int i=0; i<map_maplocal.length; i++) {
+            String str_line = map_maplocal[i];
+            for (int j = 0; j < str_line.length(); j++){
+                int cur_char = str_line.charAt(j);
+                if (cur_char == 'S') {
+                    num_DoorX = j;
+                    num_DoorY = i;
+                }
+            }
+            System.out.println(str_line);
+        }         
+        System.out.println("X and y coordinates of Door");
+        System.out.println("X coords");
+        System.out.println(num_PlayerX);
+        System.out.println("Y Coords");
+        System.out.println(num_PlayerY);
+        
+        return 0;
+    }    
+
+    public static int GetFactorial(int input){  
+     int i,fact=1;  
+     int number=input;//It is the number to calculate factorial    
+     for(i=1;i<=number;i++){    
+         fact=fact*i;    
+     }    
+     System.out.println("Factorial of "+number+" is: "+fact);
+     return fact;
+    }
+    
+//The algorythm for generating all the possible combinations on an array.
+public int factorial(int n){
+    int result;
+    if(n==0 || n==1){
+        return 1;
+    }
+    
+    result = factorial(n-1) * n;
+    return result;
+    }
+    
+    //This sorts the coin by the most efficient way to grab them all
+    //I kind of forgot to take the door into account whoops.
+    public int SortCoinList(){
+        //The number of moves to beat.
+        //For the inner loops
+        int cur_MoveCount = 0;
+        int cur_Move = 1000;
+        int cur_BestMove = 1000;
+        int cur_BestCoin = 0;
+        int cur_arrposition = 0;
+        int cur_FirstCoin = 0;
+        int cur_BestPlayerX = 0;
+        int cur_BestPlayerY = 0;
+        //List for testing combinations
+        //Needs to have all coins but one
+        //Array of size will skip one position without adding -1
+        
+        //Temporary for debugging
+        //lst_CoinOrder = new int[num_coincount];
+        lst_CoinOrder = new int[6];
+
+        
+        //Local variable for current position during calculation
+        int cur_playerX = num_PlayerX;
+        int cur_playerY = num_PlayerY;
+        
+        //Variables for the outer loop
+        //Outer number for move count.
+        int bst_movecount = 1000;
+        //Solved list
+        int lst_CoinOrderSolved[] = new int[50];
+        
+        
+        //The coin nearest the door will always be last so that can be
+        //calculated first
+        //Set best move to high value so anything calculated will beat it.
+        cur_BestMove = 1000;
+        cur_Move = 1000;      
+        for (int i = 0; i < (num_coincount); i++) {
+            cur_Move = GetMovesTwoPoints(xpt_CoinXPos[i], ypt_CoinYPos[i],
+                                         num_DoorX, num_DoorY);
+            //Check if coin i is better
+            if (cur_Move < cur_BestMove) {
+                cur_BestMove = cur_Move;
+                cur_BestCoin = i;
+            }
+        }
+        System.out.println("Best coin to go last:"+cur_BestCoin);
+        //Assign current best coin to last position in the solved array.
+        lst_CoinOrderSolved[num_coincount] = cur_BestCoin;
+        System.out.println("Last coin assigned to position:"+num_coincount);
+        //Debug value override.
+        lst_CoinOrder[0] = 10;
+        lst_CoinOrder[1] = 20;
+        lst_CoinOrder[2] = 30;
+        lst_CoinOrder[3] = 40;
+        lst_CoinOrder[4] = 50;
+        lst_CoinOrder[5] = 60;
+        
+        
+        //Calculate all combination that need to be tested
+        //Object[] elements = new Object[] {1,2,3,4,5};
+        //Object[] elements = new Object[] xpt_CoinXPos[];
+        //No need to -1 because it starts from 1 not 0 like my other counters.
+        int aa = factorial(10);
+        System.out.println("Factorail 10:"+aa);
+        
+        //Outer loop to iterate the calculation so current coin checks the next
+        //coin in the list.
+        for (int j = 0; j < (num_coincount); j++){
+            //Reset values for inner for loop
+            cur_BestMove = 1000;
+            cur_Move = 1000;
+            //This finds the number of moves to get to any coin from
+            //the current player position. Looks at all coins after the current
+            //one. Essential a factorial operation.
+            //J is essentially the cur_arrposition
+            for (int i = j; i < (num_coincount); i++){
+                cur_Move = GetMovesTwoPoints(cur_playerX,cur_playerY,xpt_CoinXPos[i],ypt_CoinYPos[i]);
+                System.out.println("Current move:"+cur_Move);
+                //Check if coin i is better
+                if (cur_Move < cur_BestMove) {
+                    cur_BestMove = cur_Move;
+                    cur_BestCoin = i;
+                }
+            }
+        //Update Player X and Y to take into account last move.
+        cur_playerX = xpt_CoinXPos[cur_BestCoin];
+        cur_playerY = ypt_CoinYPos[cur_BestCoin];
+        //Update best move number.
+        System.out.println("Current optimal move:"+cur_BestMove);
+        cur_MoveCount = cur_MoveCount + cur_BestMove;
+        //Move one number over in the factorial calculation.
+        //This is handled by the outer counter j.
+        }
+        System.out.println("End of series optimal moves:"+cur_MoveCount);
+        //See if this iteration beat the last.
+        if (cur_MoveCount < bst_movecount){
+            bst_movecount = cur_MoveCount;                
+        }
+ 
+        return 0;
+    }
+    
+    //Only takes x into account for now
+    //Will need to include ladders and walls
+    public int GetMovesTwoPoints(int inp_x1, int inp_y1,int inp_x2,
+                                    int inp_y2){
+        int result;
+        result = java.lang.Math.abs(inp_x1 - inp_x2);
+        return result;
+    }
     
 }
