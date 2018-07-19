@@ -2,7 +2,11 @@ package ca.umontreal.iro.hackathon.loderunner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
 
@@ -19,7 +23,7 @@ public class Runner extends BasicRunner {
     //Local version of the map
     String[] map_maplocal;      
     //Array of moves to win
-    int num_listofmoves[] = {LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,LEFT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT};
+    int[] num_listofmoves = new int[500];
     //Position in array of moves, can be reset if moves are recalculated
     int num_movespos = 0;
     //Arrays of coordinates
@@ -39,9 +43,10 @@ public class Runner extends BasicRunner {
     //Used in the pathfinding algorythm.
     int lst_CoinOrder[];
     int num_FactPos = 0;
-    
+    //Solved list
+    int lst_CoinOrderSolved[] = new int[50];    
     //Room name
-    public static final String ROOM = "Main48";
+    public static final String ROOM = "Main60";
     public static final int START_LEVEL = 1;
 
     
@@ -63,15 +68,27 @@ public class Runner extends BasicRunner {
 
             System.out.println(ligne);
         }
+        num_movespos = 0;
     }
 
     @Override
     public Move next(int x, int y) {
         
+        //Server was ignoring inputs when sending them too fast.
+        //Given I precalcualte all my moves it seems like the server cant keep
+        //up.
+        try {
+            TimeUnit.SECONDS.sleep(5);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(Runner.class.getName()).log(Level.SEVERE, null, ex);
+        }
         
         System.out.println("Position du runner : (" + x + ", " + y + ")");
-        
         Direction dir = Direction.fromInt(num_listofmoves[num_movespos]);
+        //int direction = (int) (Math.random() * 4 + 1);
+        //Direction dir = Direction.fromInt(direction);
+        System.out.println("Last move executed");
+        System.out.println(num_movespos);
         num_movespos++;
         return new Move(Event.MOVE, dir);
     }
@@ -81,24 +98,51 @@ public class Runner extends BasicRunner {
         GetPlayerCoords();
         GetDoorCoords();
         //Calculate best order to get coins
-        //This sorts the array so that the best coin to get first is on top.
-        
-        //Rigging of numbers for the sake of testing
-        num_PlayerX = 12;
-        num_PlayerY = 5;
-        num_DoorX = 20;
-        num_DoorY = 5;        
-        xpt_CoinXPos[0] = 12;
-        ypt_CoinYPos[0] = 5;        
-        xpt_CoinXPos[1] = 6;
-        ypt_CoinYPos[1] = 5;        
-        xpt_CoinXPos[2] = 3;
-        ypt_CoinYPos[2] = 5;        
-        
-        
-        
+        //This sorts the array so that the best coin to get first is on top.        
         SortCoinList();
         
+        //Variables for pathfinding
+        int lcl_PlayerX = num_PlayerX;
+        int lcl_PlayerY = num_PlayerY;
+        //Variable for current coin being targetted
+        int cur_TargetCoin = 0;
+        
+        for (int i = 0; i <= (num_coincount); i++){
+            cur_TargetCoin = lst_CoinOrderSolved[i];
+            while ( (lcl_PlayerX != xpt_CoinXPos[cur_TargetCoin]) || (lcl_PlayerY != ypt_CoinYPos[cur_TargetCoin]) ){
+                if (lcl_PlayerX > xpt_CoinXPos[cur_TargetCoin]){
+                    lcl_PlayerX--;
+                    num_listofmoves[num_movespos] = LEFT;
+                }
+                else if (lcl_PlayerX < xpt_CoinXPos[cur_TargetCoin]){
+                    lcl_PlayerX++;
+                    num_listofmoves[num_movespos] = RIGHT;
+                }
+                num_movespos++;
+            }
+            System.out.println("Coin obtained, current x coord");
+            System.out.println(lcl_PlayerX);            
+        }
+        //Finally add path to door.
+        while ( (lcl_PlayerX != num_DoorX) || (lcl_PlayerY != num_DoorY) ){
+            if (lcl_PlayerX > num_DoorX){
+                lcl_PlayerX--;
+                num_listofmoves[num_movespos] = LEFT;
+            }
+            else if (lcl_PlayerX < num_DoorX){
+                lcl_PlayerX++;
+                num_listofmoves[num_movespos] = RIGHT;
+            }
+            num_movespos++;
+        }
+        System.out.println("Door reached");
+        System.out.println(lcl_PlayerX);
+        
+        //Reset move position for movement code.
+        num_movespos = 0;
+        //int a = lst_CoinOrderSolved[1];
+        System.out.println("X coords");
+        System.out.println(java.util.Arrays.toString(lst_CoinOrderSolved));
         
         return 0;
     }
@@ -169,9 +213,9 @@ public class Runner extends BasicRunner {
         }         
         System.out.println("X and y coordinates of Door");
         System.out.println("X coords");
-        System.out.println(num_PlayerX);
+        System.out.println(num_DoorX);
         System.out.println("Y Coords");
-        System.out.println(num_PlayerY);
+        System.out.println(num_DoorY);
         
         return 0;
     }    
@@ -206,19 +250,23 @@ public class Runner extends BasicRunner {
         //Array of size will skip one position without adding -1
         
         //Temporary for debugging
-        //lst_CoinOrder = new int[num_coincount];
-        lst_CoinOrder = new int[5];
+        lst_CoinOrder = new int[num_coincount+1];
+        //Fill with default order starting at 0 working its way up.
+        for (int i = 0; i <= num_coincount; i++) {
+            lst_CoinOrder[i] = i;
+        }
 
         
         //Local variable for current position during calculation
         int cur_playerX = num_PlayerX;
         int cur_playerY = num_PlayerY;
+        int CoinBeingAnalysed = 0;
         
         //Variables for the outer loop
         //Outer number for move count.
         int bst_movecount = 1000;
-        //Solved list
-        int lst_CoinOrderSolved[] = new int[50];
+        int gbl_GlobalMoveCount = 1000;
+
         
         
         //The coin nearest the door will always be last so that can be
@@ -226,7 +274,7 @@ public class Runner extends BasicRunner {
         //Set best move to high value so anything calculated will beat it.
         cur_BestMove = 1000;
         cur_Move = 1000;      
-        for (int i = 0; i < (num_coincount); i++) {
+        for (int i = 0; i < (num_coincount+1); i++) {
             cur_Move = GetMovesTwoPoints(xpt_CoinXPos[i], ypt_CoinYPos[i],
                                          num_DoorX, num_DoorY);
             //Check if coin i is better
@@ -239,60 +287,71 @@ public class Runner extends BasicRunner {
         //Assign current best coin to last position in the solved array.
         lst_CoinOrderSolved[num_coincount] = cur_BestCoin;
         System.out.println("Last coin assigned to position:"+num_coincount);
-        //Debug value override.
-        lst_CoinOrder[0] = 10;
-        lst_CoinOrder[1] = 20;
-        lst_CoinOrder[2] = 30;
-        lst_CoinOrder[3] = 40;
-        lst_CoinOrder[4] = 50;
-        //lst_CoinOrder[5] = 60;
-        //Calculate all combination that need to be tested
-        //Object[] elements = new Object[] {1,2,3,4,5};
-        //Object[] elements = new Object[] xpt_CoinXPos[];
-        //No need to -1 because it starts from 1 not 0 like my other counters.
+
+        
         //Cast array to arraylist
+        //In order to find all permutations
         List<Integer> tempbetween = Arrays.stream(lst_CoinOrder).boxed().collect(Collectors.toList());
         ArrayList<Integer> Input = new ArrayList<Integer>(tempbetween);
         ArrayList<ArrayList<Integer>> allPermutations = new ArrayList<ArrayList<Integer>>();
-        List<Integer> Permutations;
+        //Find all permetutations of the array
+        CombinationFinder.enumerate(Input,(num_coincount+1),(num_coincount+1),allPermutations);
+        //Cast back to an array of integers
+        int[] arrcastback = new int[50];
+        List<Integer> ind_Permutations;
         
-        CombinationFinder.enumerate(Input,5,5,allPermutations);
-        
-        
-        //Outer loop to iterate the calculation so current coin checks the next
-        //coin in the list.
-        for (int j = 0; j < (num_coincount); j++){
-            //Reset values for inner for loop
-            cur_BestMove = 1000;
-            cur_Move = 1000;
-            //This finds the number of moves to get to any coin from
-            //the current player position. Looks at all coins after the current
-            //one. Essential a factorial operation.
-            //J is essentially the cur_arrposition
-            for (int i = j; i < (num_coincount); i++){
-                cur_Move = GetMovesTwoPoints(cur_playerX,cur_playerY,xpt_CoinXPos[i],ypt_CoinYPos[i]);
-                System.out.println("Current move:"+cur_Move);
-                //Check if coin i is better
-                if (cur_Move < cur_BestMove) {
-                    cur_BestMove = cur_Move;
-                    cur_BestCoin = i;
-                }
+        for (int k= 0; k < allPermutations.size(); k++) {
+
+            arrcastback = allPermutations.get(k).stream().mapToInt(i -> i).toArray();
+            //Make sure last element matches the optimal one
+            //IE only test optentially optiaml permutations.
+            if (arrcastback[num_coincount] != cur_BestCoin) {
+                continue;
             }
-        //Update Player X and Y to take into account last move.
-        cur_playerX = xpt_CoinXPos[cur_BestCoin];
-        cur_playerY = ypt_CoinYPos[cur_BestCoin];
-        //Update best move number.
-        System.out.println("Current optimal move:"+cur_BestMove);
-        cur_MoveCount = cur_MoveCount + cur_BestMove;
-        //Move one number over in the factorial calculation.
-        //This is handled by the outer counter j.
+        
+
+
+            //Outer loop to iterate the calculation so current coin checks the next
+            //coin in the list.
+            for (int j = 0; j < (num_coincount); j++){
+                //Reset values for inner for loop
+                cur_BestMove = 1000;
+                cur_Move = 1000;
+                //This finds the number of moves to get to any coin from
+                //the current player position. Looks at all coins after the current
+                //one. Essential a factorial operation.
+                //J is essentially the cur_arrposition
+                for (int i = j; i < (num_coincount); i++){
+                    CoinBeingAnalysed = arrcastback[i];
+                    cur_Move = GetMovesTwoPoints(cur_playerX,cur_playerY,xpt_CoinXPos[CoinBeingAnalysed],ypt_CoinYPos[CoinBeingAnalysed]);
+                    //Check if coin i is better
+                    if (cur_Move < cur_BestMove) {
+                        cur_BestMove = cur_Move;
+                        cur_BestCoin = CoinBeingAnalysed;
+                    }
+                }
+                //Update Player X and Y to take into account last move.
+                cur_playerX = xpt_CoinXPos[cur_BestCoin];
+                cur_playerY = ypt_CoinYPos[cur_BestCoin];
+                //Update best move number.
+                System.out.println("Current optimal move:"+cur_BestMove);
+                cur_MoveCount = cur_MoveCount + cur_BestMove;
+                //Move one number over in the factorial calculation.
+                //This is handled by the outer counter j.
+            }
+            System.out.println("End of series optimal moves:"+cur_MoveCount);
+            //Reset player position to start
+            cur_playerX = num_PlayerX;
+            cur_playerY = num_PlayerY;                
+            //See if this iteration beat the last.
+            if (cur_MoveCount < bst_movecount){
+                bst_movecount = cur_MoveCount;
+                lst_CoinOrderSolved = arrcastback;
+                System.out.println("New optimal array found, Moves:"+bst_movecount);
+                System.out.println(java.util.Arrays.toString(lst_CoinOrderSolved));                 
+            }                   
+        
         }
-        System.out.println("End of series optimal moves:"+cur_MoveCount);
-        //See if this iteration beat the last.
-        if (cur_MoveCount < bst_movecount){
-            bst_movecount = cur_MoveCount;                
-        }
- 
         return 0;
     }
     
