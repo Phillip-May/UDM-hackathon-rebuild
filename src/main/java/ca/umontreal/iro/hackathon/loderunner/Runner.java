@@ -46,7 +46,7 @@ public class Runner extends BasicRunner {
     //Solved list
     int lst_CoinOrderSolved[] = new int[50];    
     //Room name
-    public static final String ROOM = "Main60";
+    public static final String ROOM = "Main2";
     public static final int START_LEVEL = 1;
 
     
@@ -78,7 +78,7 @@ public class Runner extends BasicRunner {
         //Given I precalcualte all my moves it seems like the server cant keep
         //up.
         try {
-            TimeUnit.SECONDS.sleep(5);
+            TimeUnit.SECONDS.sleep(1);
         } catch (InterruptedException ex) {
             Logger.getLogger(Runner.class.getName()).log(Level.SEVERE, null, ex);
         }

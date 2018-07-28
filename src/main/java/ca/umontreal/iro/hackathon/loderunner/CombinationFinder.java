@@ -4,7 +4,7 @@ import java.util.ArrayList;
  *
  * @author Admin123
  */
-public class CombinationFinder {
+public class CombinationFinder extends Runner {
     // a is the original array
     // k is the number of elements in each permutation
     public static ArrayList<ArrayList<Integer>> choose(ArrayList<Integer> a, int k) {
