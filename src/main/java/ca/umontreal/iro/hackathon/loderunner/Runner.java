@@ -41,10 +41,11 @@ public class Runner extends BasicRunner {
         //First thing is to copy/save array so that it can used and modified
         RunnerPathFind Pathfinder = new RunnerPathFind();
         Pathfinder.SetMapArray(grid);
+        //Generate winning combination of moves
+        Pathfinder.PathFind();
         
         //Get list of moves and store in an array
         mvs_MasterList = Pathfinder.GetMoveList();
-
         
         System.out.println("Place Holder to check array conts with debugger");
         //Main algorythm to get find a path
@@ -65,7 +66,7 @@ public class Runner extends BasicRunner {
         //Given I precalcualte all my moves it seems like the server cant keep
         //up.
         try {
-            TimeUnit.SECONDS.sleep(5);
+            TimeUnit.SECONDS.sleep(1);
         } catch (InterruptedException ex) {
             Logger.getLogger(Runner.class.getName()).log(Level.SEVERE, null, ex);
         }

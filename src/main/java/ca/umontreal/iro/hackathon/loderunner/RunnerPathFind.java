@@ -62,14 +62,22 @@ public class RunnerPathFind extends Runner {
     }
 
     public int[] GetMoveList(){
-    ArrayList<Integer> numbers = new ArrayList<Integer>();
-    numbers.add(2);
-    numbers.add(4);
-    numbers.add(2);
+    ArrayList<Integer> mvs_masterlist = new ArrayList<Integer>();
+    //Fill arraylist with winning moves
+    for (int i = 0; i < num_movespos; i++){
+        mvs_masterlist.add(num_listofmoves[i]);
+    }
+    //Buffer to make end visible
+    mvs_masterlist.add(0);
+    mvs_masterlist.add(0);
+    mvs_masterlist.add(0);
+    //Zero means dont move
+    System.out.println("Returning winning array of size:");
+    System.out.println(num_movespos);    
     //Convert ArrayList to integer array to return;
     int i = 0;
-    int[] ArrayReturned = new int[numbers.size()];
-    for (Integer n : numbers) {
+    int[] ArrayReturned = new int[mvs_masterlist.size()];
+    for (Integer n : mvs_masterlist) {
         ArrayReturned[i++] = n;
     }    
     
@@ -125,8 +133,6 @@ public class RunnerPathFind extends Runner {
         System.out.println(lcl_PlayerX);
         
         //Reset move position for movement code.
-        num_movespos = 0;
-        //int a = lst_CoinOrderSolved[1];
         System.out.println("X coords");
         System.out.println(java.util.Arrays.toString(lst_CoinOrderSolved));
         
