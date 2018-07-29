@@ -21,7 +21,8 @@ public class RunnerPathFind extends Runner {
     private static final int DOWN = 3;
     private static final int RIGHT = 4;
     
-    
+    //Test varialb
+    int genericinteger = 1;
     //Variables
     //Local version of the map
     String[] map_maplocal;      
@@ -62,33 +63,52 @@ public class RunnerPathFind extends Runner {
     }
 
     public int[] GetMoveList(){
-    ArrayList<Integer> mvs_masterlist = new ArrayList<Integer>();
-    //Fill arraylist with winning moves
-    for (int i = 0; i < num_movespos; i++){
-        mvs_masterlist.add(num_listofmoves[i]);
-    }
-    //Buffer to make end visible
-    mvs_masterlist.add(0);
-    mvs_masterlist.add(0);
-    mvs_masterlist.add(0);
-    //Zero means dont move
-    System.out.println("Returning winning array of size:");
-    System.out.println(num_movespos);    
-    //Convert ArrayList to integer array to return;
-    int i = 0;
-    int[] ArrayReturned = new int[mvs_masterlist.size()];
-    for (Integer n : mvs_masterlist) {
-        ArrayReturned[i++] = n;
-    }    
-    
-    //Return array
-    return(ArrayReturned);
+        ArrayList<Integer> mvs_masterlist = new ArrayList<Integer>();
+        //Fill arraylist with winning moves
+        for (int i = 0; i < num_movespos; i++){
+            mvs_masterlist.add(num_listofmoves[i]);
+        }
+        //Buffer to make end visible
+        mvs_masterlist.add(0);
+        mvs_masterlist.add(0);
+        mvs_masterlist.add(0);
+        //Zero means dont move
+        System.out.println("Returning winning array of size:");
+        System.out.println(num_movespos);    
+        //Convert ArrayList to integer array to return;
+        int i = 0;
+        int[] ArrayReturned = new int[mvs_masterlist.size()];
+        for (Integer n : mvs_masterlist) {
+            ArrayReturned[i++] = n;
+        }    
+
+        //Return array
+        return(ArrayReturned);
     }    
     
     public int PathFind() {
-        GetCoinCoords();
-        GetPlayerCoords();
-        GetDoorCoords();
+        //Create subclasses
+        RunnerMapIO MapGetter = new RunnerMapIO();
+        RunnerPather MapPToP = new RunnerPather();
+        
+        //Give it a copy of the map
+        MapGetter.SetMapArray(map_maplocal);
+        MapPToP.SetASCIIMapArray(map_maplocal);
+        //Generate data based on map data
+        MapGetter.FindStuff();
+        //Grab variables from sub class
+        num_DoorX = MapGetter.GetDoorX();
+        num_DoorY = MapGetter.GetDoorY();
+        num_PlayerX = MapGetter.GetPlayerX();
+        num_PlayerY = MapGetter.GetPlayerY();
+        xpt_CoinXPos = MapGetter.GetCoinX();
+        ypt_CoinYPos = MapGetter.GetCoinY();
+        num_coincount = MapGetter.GetCoinAmount();
+        
+        //Test path finding
+        MapPToP.GetTurnsTwoPoints(num_PlayerX,num_PlayerY,num_DoorX,num_DoorY);
+        
+        
         //Calculate best order to get coins
         //This sorts the array so that the best coin to get first is on top.        
         SortCoinList();
@@ -135,79 +155,6 @@ public class RunnerPathFind extends Runner {
         //Reset move position for movement code.
         System.out.println("X coords");
         System.out.println(java.util.Arrays.toString(lst_CoinOrderSolved));
-        
-        return 0;
-    }
-    
-    
-    public int GetCoinCoords() {
-        num_coincount = 0;
-        //Populates teh array called pts_CoinCoords
-        //Debug prints
-        
-        for (int i=0; i<map_maplocal.length; i++) {
-            String str_line = map_maplocal[i];
-            for (int j = 0; j < str_line.length(); j++){
-                int cur_char = str_line.charAt(j);
-                if (cur_char == '$') {
-                    xpt_CoinXPos[num_coincount] = j;
-                    ypt_CoinYPos[num_coincount] = i;
-                    num_coincount++;
-                }
-            }
-            System.out.println(str_line);
-        }
-        //Decrement coint count so it reflects the number of coins found.
-        num_coincount--;
-        System.out.println("X and y coordinates of coins");
-        System.out.println("X coords");
-        System.out.println(java.util.Arrays.toString(xpt_CoinXPos));
-        System.out.println("Y Coords");
-        System.out.println(java.util.Arrays.toString(ypt_CoinYPos));
-        
-        return 0;
-    }    
-
-    public int GetPlayerCoords() {
-
-        for (int i=0; i<map_maplocal.length; i++) {
-            String str_line = map_maplocal[i];
-            for (int j = 0; j < str_line.length(); j++){
-                int cur_char = str_line.charAt(j);
-                if (cur_char == '&') {
-                    num_PlayerX = j;
-                    num_PlayerY = i;
-                }
-            }
-            System.out.println(str_line);
-        }         
-        System.out.println("X and y coordinates of player");
-        System.out.println("X coords");
-        System.out.println(num_PlayerX);
-        System.out.println("Y Coords");
-        System.out.println(num_PlayerY);
-        
-        return 0;
-    }
-    
-    public int GetDoorCoords() {
-
-        for (int i=0; i<map_maplocal.length; i++) {
-            String str_line = map_maplocal[i];
-            for (int j = 0; j < str_line.length(); j++){
-                int cur_char = str_line.charAt(j);
-                if (cur_char == 'S') {
-                    num_DoorX = j;
-                    num_DoorY = i;
-                }
-            }
-            System.out.println(str_line);
-        }         
-        System.out.println("X and y coordinates of Door");
-        System.out.println("X coords");
-        System.out.println(num_DoorX);
-        System.out.println("Y Coords");
-        System.out.println(num_DoorY);
         
         return 0;
     }    

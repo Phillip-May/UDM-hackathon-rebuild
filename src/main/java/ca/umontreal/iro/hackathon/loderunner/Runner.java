@@ -27,7 +27,7 @@ public class Runner extends BasicRunner {
 
     
     //Room name
-    public static final String ROOM = "Main5";
+    public static final String ROOM = "Main7";
     public static final int START_LEVEL = 1;
 
     
@@ -53,7 +53,6 @@ public class Runner extends BasicRunner {
         
         for (int i=0; i<grid.length; i++) {
             String ligne = grid[i];
-
             System.out.println(ligne);
         }
     }
