@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
 
-public class RunnerMapIO extends RunnerPathFind {
+public class RunnerMapIO {
     //Symbolic constants
     private static final int UP = 1;
     private static final int LEFT = 2;
