@@ -27,7 +27,7 @@ public class Runner extends BasicRunner {
 
     
     //Room name
-    public static final String ROOM = "Main7";
+    public static final String ROOM = "Main4";
     public static final int START_LEVEL = 1;
 
     
@@ -41,16 +41,15 @@ public class Runner extends BasicRunner {
         //First thing is to copy/save array so that it can used and modified
         RunnerPathFind Pathfinder = new RunnerPathFind();
         Pathfinder.SetMapArray(grid);
-        //Generate winning combination of moves
-        Pathfinder.PathFind();
+
+        //Main algorythm to get find a path
+        Pathfinder.PathFind();        
         
         //Get list of moves and store in an array
         mvs_MasterList = Pathfinder.GetMoveList();
         
-        System.out.println("Place Holder to check array conts with debugger");
-        //Main algorythm to get find a path
-        Pathfinder.PathFind();
         
+        System.out.println("Place Holder to check array conts with debugger");
         for (int i=0; i<grid.length; i++) {
             String ligne = grid[i];
             System.out.println(ligne);
@@ -65,7 +64,7 @@ public class Runner extends BasicRunner {
         //Given I precalcualte all my moves it seems like the server cant keep
         //up.
         try {
-            TimeUnit.SECONDS.sleep(1);
+            TimeUnit.MILLISECONDS.sleep(500);
         } catch (InterruptedException ex) {
             Logger.getLogger(Runner.class.getName()).log(Level.SEVERE, null, ex);
         }

@@ -15,6 +15,11 @@ public class RunnerPather extends RunnerPathFind {
     
     //Stores the map data
     String[] map_maplocalASCII;
+    int destX;
+    int destY;
+    ArrayList<MapTile> pts_OpenList;
+    ArrayList<MapTile> pts_ClosedList;
+    int TileListCheckTruePos;
     
     //Class constructor
     public RunnerPather(){
@@ -27,14 +32,26 @@ public class RunnerPather extends RunnerPathFind {
     }
 
     //Returns the character at any given point
-    public char GetCharPosition(int inp_x, int inp_y){
+    public char GetCharFromPosition(int inp_x, int inp_y){
         
         char chr_ReturnData;
         //Grab the correct string based on the y vlaue
-        String str_line = map_maplocalASCII[inp_y];
-        chr_ReturnData =str_line.charAt(inp_x);
+        //Make sure x and y are not out of boundsx
+        //If they are then dont return a valid character
+        //My invalid character will be lowercase z 'z'
+        chr_ReturnData = 'z';
+        
+        if ( (inp_y < map_maplocalASCII.length) && (inp_x >= 0)){
+            String str_line = map_maplocalASCII[inp_y];
+            //Make sure the x value is valid as well.
+            if ( (inp_x < str_line.length() ) && (inp_x >= 0)) {
+                chr_ReturnData =str_line.charAt(inp_x);    
+            }           
+        }
+
         System.out.println("Found charater is:");
-        System.out.println(chr_ReturnData);
+        System.out.println(chr_ReturnData); 
+        
         return chr_ReturnData;
     }    
     
@@ -45,17 +62,24 @@ public class RunnerPather extends RunnerPathFind {
         //Number of turns to get to from start position
         int gValue;
         //Estimate of turns from here to destination
+        int hValue;
         //Estimate ignores terain and simply finds absolute distance
-        int fValue;
+        private int fValue;
         //The tile from which this one was accessed
         int ChildXPosition;
         int ChildYPosition;
         
+        public int GetfValue(){
+            fValue = gValue+hValue;
+            return fValue;
+        }
 
         public MapTile(){
             xposition = 0;
             yposition = 0;
-            gValue = 0;
+            //This should never stay -1
+            gValue = -1;
+            hValue = -1;
             fValue = 0;
             ChildXPosition = 0;
             ChildYPosition = 0;
@@ -66,153 +90,163 @@ public class RunnerPather extends RunnerPathFind {
     //https://www.raywenderlich.com/4946/introduction-to-a-pathfinding
     public int GetTurnsTwoPoints(int inp_x1, int inp_y1,int inp_x2,
                                     int inp_y2){
-        //Two lists of x and y and F values in order
-        //For the record I would use a structure in c, a class is overkill
-        //One list for tiles being considered
-        ArrayList<MapTile> pts_OpenList = new ArrayList<>();
-        //One list for tiles already considered
-        ArrayList<MapTile> pts_ClosedList = new ArrayList<>();
-        //List for adjacent tiles
-        ArrayList<MapTile> pts_Adjacent = new ArrayList<>();
+        pts_OpenList = new ArrayList<>();
+        pts_ClosedList = new ArrayList<>();
         //Map Tile of the current x,y and g values
         MapTile pnt_CurrentTile = new MapTile();
         //Map tile of the current adjacent tile being considered
-        MapTile pnt_CurrentAdjTile = new MapTile();
+        ArrayList<MapTile> pts_AdjacentTiles = new ArrayList<>();
+        MapTile pnt_CurrentBestTile = new MapTile();
+        MapTile pnt_curTile;
         
-        //Add starting point to open list
-        MapTile StartTile = new MapTile();
-        StartTile.xposition = inp_x1;
-        StartTile.yposition = inp_y1;
-        StartTile.gValue = 0;
-        pts_OpenList.add(StartTile);
-        //Save Destination X and Y values
-        int DestinationX = inp_x2;
-        int DestinationY = inp_y2;
+        //Start
+        pnt_CurrentTile.xposition = inp_x1;
+        pnt_CurrentTile.yposition = inp_y1;
+        pnt_CurrentTile.gValue = 0;
+        boolean currentComparison = false;
+        int compX = -1;
+        int compY = -1;
         
-        //Initialise starting data for pathfinding loop
+        //Save destination to global
+        destX = inp_x2;
+        destY = inp_y2;
 
-        //Main loop runs while tiles are still being considered
-        while( pts_OpenList.isEmpty() == false ){
+        //Add original to open list
+        pts_OpenList.add(pnt_CurrentTile);
+        
+        do {
+            pnt_CurrentBestTile = new MapTile();
+            pnt_CurrentBestTile = GetLowestFScore(pts_OpenList);
+            //Add it to the closed list
+            pts_ClosedList.add(pnt_CurrentBestTile);
+            //Remove it from the open list
+            pts_OpenList.remove(pnt_CurrentBestTile);
             
-            MapTile ComparisonMapTile = pts_OpenList.get(0);
-            
-            //Find openlist square with lowest F score
-            for (int i = 0; i < pts_OpenList.size(); i++){
-                ComparisonMapTile = pts_OpenList.get(i);
-                if (pnt_CurrentTile.gValue < ComparisonMapTile.fValue){
-                    pnt_CurrentTile = ComparisonMapTile;
-                }
-            }
-            //Add it to the current closed list
-            pts_ClosedList.add(pnt_CurrentTile);
-            //Remove it from the open lists
-            pts_OpenList.remove(pnt_CurrentTile);
-            
-            //Check if closed list contains destination tile
-            //If it does then break from the loop
-            for (int i = 0; i < pts_ClosedList.size(); i++){
-                
-                if ( (ComparisonMapTile.xposition == DestinationX) &&
-                     (ComparisonMapTile.yposition == DestinationY) ){
-                    //Leave the main while loop
-                    break;
-                }                
+            //Check if destination sqaure is in closed list
+            currentComparison = TileListContainsXY(pts_ClosedList,inp_x2,inp_y2);
+            if (currentComparison == true){
+                break;
             }
             
-            
-            //Retrieve all walkable tiles from currently considered map tiles
-            pts_Adjacent = GetAdjacentTiles(pnt_CurrentTile);
-            
-            
-            //Iterate through all adjacent square being considered
-            for (int i = 0; i < pts_Adjacent.size(); i++){
-                pnt_CurrentAdjTile = pts_Adjacent.get(i);
-                //First check if current adjacent tile is in closed list
-                //If it is just skip it
-                boolean ShouldConsiderCurrentTile = true;
-                MapTile CurrentClosedTile = new MapTile();
-                for (int j = 0; j < pts_ClosedList.size(); j++){
-                    CurrentClosedTile = pts_ClosedList.get(j);
-                    if ( (pnt_CurrentAdjTile.xposition == CurrentClosedTile.xposition) &&
-                         (pnt_CurrentAdjTile.yposition == CurrentClosedTile.yposition) ){
-                        ShouldConsiderCurrentTile = false;
-                    }
-                }
-                if (ShouldConsiderCurrentTile == false){
-                    //Skip to next for loop iteration
+            pts_AdjacentTiles = GetAdjacentTiles(pnt_CurrentBestTile);
+            for (int i = 0; i < pts_AdjacentTiles.size(); i++){
+                pnt_curTile = new MapTile();
+                pnt_curTile = pts_AdjacentTiles.get(i);
+                compX = pnt_curTile.xposition;
+                compY = pnt_curTile.yposition;
+                currentComparison = TileListContainsXY(pts_ClosedList,compX,compY);
+                if (currentComparison == true){
                     continue;
                 }
-                boolean CurrentTileInOpenList = false;
-                MapTile CurrentOpenTile = new MapTile();
-                //Check if current adjacnet tile is in the open list
-                //And if is store the index of it
-                int ind_CurrentTileInOpen = -1;
-                for (int j = 0; j < pts_OpenList.size(); j++){
-                    CurrentOpenTile = pts_ClosedList.get(j);
-                    if ( (pnt_CurrentAdjTile.xposition == CurrentClosedTile.xposition) &&
-                         (pnt_CurrentAdjTile.yposition == CurrentClosedTile.yposition) ){
-                        CurrentTileInOpenList = true;
-                        ind_CurrentTileInOpen = j;
+                currentComparison = TileListContainsXY(pts_OpenList,compX,compY);
+                if (currentComparison == false){
+                    pts_OpenList.add(pnt_curTile);
+                }
+                else {
+                    int curItemGscore;
+                    int curListGscore;                
+                    MapTile GscoreComparsion = new MapTile();
+                    GscoreComparsion = pts_OpenList.get(TileListCheckTruePos);
+                    curItemGscore = pnt_curTile.gValue;
+                    curListGscore = GscoreComparsion.gValue;
+                    if (curItemGscore < curListGscore){
+                        pts_OpenList.remove(TileListCheckTruePos);
+                        pts_OpenList.add(pnt_curTile);
                     }
                 }
-                
-                //If not in open list then add it
-                if (CurrentTileInOpenList == false){
-                    pts_OpenList.add(pnt_CurrentAdjTile);
-                } //It is already in the Open list
-                else if (CurrentTileInOpenList == true){
-                    //If current G score is lower then current G score
-                    //Then update it using ind_CurrentTileInOpen
-                    if ( CurrentOpenTile.gValue < pnt_CurrentAdjTile.gValue){
-                        CurrentOpenTile.gValue = pnt_CurrentAdjTile.gValue;
-                    }
-                }
-            //End of for loop of adjacent tiles
             }
-        //End of main while loop for checking all adjacent tiles.
-        }                 
-    //Now recover the best path
-        
-    int result;
-    result = java.lang.Math.abs(inp_x1 - inp_x2);
-    return result;   
+        } while(pts_OpenList.isEmpty() == false);
+        return 0;   
     }
     
-    //Given A Map tiles returns an arraylist of all adjacent tiles
+    //Given A Map tiles returns an arraylist of all adjacent walkable tiles
     private ArrayList<MapTile> GetAdjacentTiles(MapTile inp_CurrentTile){
         ArrayList<MapTile> pts_AdjacentTiles = new ArrayList<>();
         int pnt_CurX = inp_CurrentTile.xposition;
         int pnt_CurY = inp_CurrentTile.yposition;
         int pnt_CurG = inp_CurrentTile.gValue;
-        MapTile pts_AddedTile =  new MapTile();
+        MapTile pts_curTile = new MapTile();
+        int curHValue = -1;
+        curHValue = hValueEstimation(1,1,6,6);
+        char curChar;
         
-        //Try to add all the tiles
+        //Up
         
-        //Above
-        
-        //Below
+        //Down
         
         //Left (-x)
-        //Tile 1 left and down needs to be an '@'
-        if ( GetCharPosition( (pnt_CurX - 1),(pnt_CurY - 1) ) == '@'){
-            pts_AddedTile.xposition = pnt_CurX;
-            pts_AddedTile.yposition = pnt_CurY;
-            //Inherit previous tile and add 1 
-            pts_AddedTile.fValue = (pnt_CurG + 1);
+        //Check if adjacent tile is moveable
+        curChar = GetCharFromPosition( (pnt_CurX - 1),(pnt_CurY) );
+        if ( (curChar == ' ') || (curChar == 'S') || (curChar == '$') || (curChar == '&')){
+            pts_curTile = new MapTile();
+            pts_curTile.xposition = (pnt_CurX-1);
+            pts_curTile.yposition = (pnt_CurY);
+            pts_curTile.gValue = (pnt_CurG+1);
+            //hValue estimation (a^2+b^2=c^2)
+            curHValue = hValueEstimation(pnt_CurX-1,pnt_CurY,destX,destY);
+            //Save HValue
+            pts_curTile.hValue = curHValue;
             //Add it to the array list
-            pts_AdjacentTiles.add(pts_AddedTile);
+            pts_AdjacentTiles.add(pts_curTile);
         }
-        
         //Right (+x)
-        //Tile 1 Right and down needs to be an '@'
-        if ( GetCharPosition( (pnt_CurX + 1),(pnt_CurY - 1) ) == '@'){
-            pts_AddedTile.xposition = pnt_CurX;
-            pts_AddedTile.yposition = pnt_CurY;
-            //Inherit previous tile and add 1 
-            pts_AddedTile.fValue = (pnt_CurG + 1);
-            pts_AdjacentTiles.add(pts_AddedTile);
-        }        
+        curChar = GetCharFromPosition( (pnt_CurX + 1),(pnt_CurY) );
+        if ( (curChar == ' ') || (curChar == 'S') || (curChar == '$') || (curChar == '&')){
+            pts_curTile = new MapTile();
+            pts_curTile.xposition = (pnt_CurX+1);
+            pts_curTile.yposition = (pnt_CurY);
+            pts_curTile.gValue = (pnt_CurG+1);
+            //hValue estimation (a^2+b^2=c^2)
+            curHValue = hValueEstimation(pnt_CurX+1,pnt_CurY,destX,destY);            
+            //Save HValue
+            pts_curTile.hValue = curHValue;            
+            //Add it to the array list
+            pts_AdjacentTiles.add(pts_curTile);
+        }         
         
         return pts_AdjacentTiles;
+    }
+    
+    boolean TileListContainsXY(ArrayList<MapTile> pts_InputList,
+                                                  int inp_X,int inp_Y){
+        boolean ReturnValue = false;
+        MapTile lcl_MapTile = new MapTile();
+        for (int i = 0; i < pts_InputList.size(); i++){
+            lcl_MapTile = new MapTile();
+            lcl_MapTile = pts_InputList.get(i);
+            if( (lcl_MapTile.xposition == inp_X) && (lcl_MapTile.yposition == inp_Y) ){
+                TileListCheckTruePos = i;
+                ReturnValue = true;
+            }
+        }
+        return ReturnValue;
+    }
+    
+    MapTile GetLowestFScore(ArrayList<MapTile> inputArrayTiles){
+        MapTile returnedTile = new MapTile();
+        MapTile currentTile = new MapTile();
+        int bestFValue = 1000;
+        
+        for (int i = 0; i < inputArrayTiles.size(); i++){
+            currentTile = inputArrayTiles.get(i);
+            if (currentTile.GetfValue() < bestFValue){
+                bestFValue = currentTile.GetfValue();
+                returnedTile = currentTile;
+            }
+        }
+        
+        return returnedTile;
+    }
+    
+    int hValueEstimation(int inp_x1,int inp_y1,int inp_x2,int inp_y2){
+        int absoluteX;
+        int absoluteY;
+        int returnHValue;
+        
+        absoluteX = Math.abs(inp_x1-inp_x2);
+        absoluteY = Math.abs(inp_y1-inp_y2);
+        returnHValue = absoluteX+absoluteY;
+        
+        return returnHValue;
     }
 }

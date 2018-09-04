@@ -107,6 +107,7 @@ public class RunnerPathFind extends Runner {
         
         //Test path finding
         MapPToP.GetTurnsTwoPoints(num_PlayerX,num_PlayerY,num_DoorX,num_DoorY);
+        //MapPToP.GetTurnsTwoPoints(15,5,12,5);
         
         
         //Calculate best order to get coins
