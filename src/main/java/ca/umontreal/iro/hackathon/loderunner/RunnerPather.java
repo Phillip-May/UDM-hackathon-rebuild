@@ -48,8 +48,6 @@ public class RunnerPather extends RunnerPathFind {
                 chr_ReturnData =str_line.charAt(inp_x);    
             }           
         }
-
-        System.out.println(chr_ReturnData); 
         
         return chr_ReturnData;
     }    
@@ -81,6 +79,7 @@ public class RunnerPather extends RunnerPathFind {
                                   int inp_x2,int inp_y2){
         pts_OpenList = new ArrayList<>();
         pts_ClosedList = new ArrayList<>();
+        boolean foundapath = false;
         //Map Tile of the current x,y and g values
         MapTile pnt_CurrentTile = new MapTile();
         //Map tile of the current adjacent tile being considered
@@ -115,6 +114,7 @@ public class RunnerPather extends RunnerPathFind {
             currentComparison = TileListContainsXY(pts_ClosedList,inp_x2,inp_y2);
             if (currentComparison == true){
                 System.out.println("Valid path found.");
+                foundapath = true;
                 break;
             }
             
@@ -146,34 +146,73 @@ public class RunnerPather extends RunnerPathFind {
                 }
             }
         } while(pts_OpenList.isEmpty() == false);
+        //Check if it found a path of stop trying
+        if (foundapath == false){
+            System.out.println("Shit went wrong.");
+        }
+        
         return 0;   
     }
     public int GetTurnsTwoPoints(int inp_x1, int inp_y1,int inp_x2,
                                     int inp_y2){
         //Pathfind between two points
         FindTurnsTwoPoints(inp_x1,inp_y1,inp_x2,inp_y2);
+        int ind_last = pts_ClosedList.size();
+        int returnvalue = pts_ClosedList.get(ind_last-1).gValue;
         
-        
-        return pts_ClosedList.size();
+        return returnvalue;
     }
     
     public ArrayList<Integer> GetMovesArrayTwoPoints(int inp_x1, int inp_y1,int inp_x2,
                                     int inp_y2){
         FindTurnsTwoPoints(inp_x1,inp_y1,inp_x2,inp_y2);
         ArrayList<Integer> ReturnedList = new ArrayList<Integer>();
+        ArrayList<MapTile> SolvedListSimple = new ArrayList<MapTile>();
         int lastx,lasty,nextx,nexty;
+        //First simplify the list by going from last point to first pont        
+        int closedsize = pts_ClosedList.size();
+        int j = pts_ClosedList.size();
+        int ind_nextTile = -1;
         
-        for (int i = 0; i < (pts_ClosedList.size()-1); i++){
-            lastx = pts_ClosedList.get(i).xposition;
-            lasty = pts_ClosedList.get(i).yposition;
-            nextx = pts_ClosedList.get(i+1).xposition;
-            nexty = pts_ClosedList.get(i+1).yposition;
+        //Add the first tile
+        ind_nextTile = TileListContainsXYAT(pts_ClosedList,inp_x2,inp_y2);
+        SolvedListSimple.add( pts_ClosedList.get(ind_nextTile) );
+        
+        int cur_gvalue = pts_ClosedList.get(closedsize-1).gValue;
+        lastx = pts_ClosedList.get(closedsize-1).ChildXPosition;      
+        lasty = pts_ClosedList.get(closedsize-1).ChildYPosition;        
+        nextx = pts_ClosedList.get(closedsize-1).xposition;      
+        nexty = pts_ClosedList.get(closedsize-1).yposition;           
+        ind_nextTile = TileListContainsXYAT(pts_ClosedList,lastx,lasty);
+        while ( (nextx != inp_x1) || (nexty != inp_y1) ){
+            if (pts_ClosedList.get(ind_nextTile).gValue == (cur_gvalue - 1) ){
+                SolvedListSimple.add( pts_ClosedList.get(ind_nextTile) );
+            }
+            else {
+                //Try again if not correct gvalue?
+                System.out.println("Shit went wrong after sorting.");
+                continue;                
+            }
+            nextx = pts_ClosedList.get(ind_nextTile).ChildXPosition;      
+            nexty = pts_ClosedList.get(ind_nextTile).ChildYPosition;
+            cur_gvalue = pts_ClosedList.get(ind_nextTile).gValue;
+            ind_nextTile = TileListContainsXYAT(pts_ClosedList,nextx,nexty);            
+        }
+        //Add the last tile
+        SolvedListSimple.add( pts_ClosedList.get(ind_nextTile) );      
+        //Now get moves from the simplified list
+        
+        for (int i = (SolvedListSimple.size()-1); i > 0; i--){
+            lastx = SolvedListSimple.get(i).xposition;
+            lasty = SolvedListSimple.get(i).yposition;
+            nextx = SolvedListSimple.get(i-1).xposition;
+            nexty = SolvedListSimple.get(i-1).yposition;
             //Up
-            if (nexty > lasty){
+            if (nexty < lasty){
                 ReturnedList.add(UP);
             }
             //Down
-            else if (nexty < lasty){
+            else if (nexty > lasty){
                 ReturnedList.add(DOWN);
             }
             //Left
@@ -181,7 +220,7 @@ public class RunnerPather extends RunnerPathFind {
                 ReturnedList.add(LEFT);
             }            
             //Right
-            else if (nextx > lasty){
+            else if (nextx > lastx){
                 ReturnedList.add(RIGHT);
             }
             //Dig
@@ -189,7 +228,7 @@ public class RunnerPather extends RunnerPathFind {
                 ReturnedList.add(DIG);
             }                
             //Error
-            else if (nextx > lasty){
+            else {
                 ReturnedList.add(ERROR);
             }
         }
@@ -211,14 +250,30 @@ public class RunnerPather extends RunnerPathFind {
         char curChar;
         
         //Up
-        
+        curChar = GetCharFromPosition( (pnt_CurX),(pnt_CurY-1) );
+        if ( (curChar == 'H') ){
+            pts_curTile = new MapTile();
+            pts_curTile.ChildXPosition = pnt_CurX;
+            pts_curTile.ChildYPosition = pnt_CurY;        
+            pts_curTile.xposition = (pnt_CurX);
+            pts_curTile.yposition = (pnt_CurY-1);
+            pts_curTile.gValue = (pnt_CurG+1);
+            //hValue estimation (a^2+b^2=c^2)
+            curHValue = hValueEstimation(pnt_CurX,pnt_CurY+1,destX,destY);
+            //Save HValue
+            pts_curTile.hValue = curHValue;
+            //Add it to the array list
+            pts_AdjacentTiles.add(pts_curTile);
+        }      
         //Down
         
         //Left (-x)
         //Check if adjacent tile is moveable
         curChar = GetCharFromPosition( (pnt_CurX - 1),(pnt_CurY) );
-        if ( (curChar == ' ') || (curChar == 'S') || (curChar == '$') || (curChar == '&')){
+        if ( (curChar == ' ') || (curChar == 'S') || (curChar == '$') || (curChar == '&') || (curChar == 'H')){
             pts_curTile = new MapTile();
+            pts_curTile.ChildXPosition = pnt_CurX;
+            pts_curTile.ChildYPosition = pnt_CurY;
             pts_curTile.xposition = (pnt_CurX-1);
             pts_curTile.yposition = (pnt_CurY);
             pts_curTile.gValue = (pnt_CurG+1);
@@ -231,8 +286,10 @@ public class RunnerPather extends RunnerPathFind {
         }
         //Right (+x)
         curChar = GetCharFromPosition( (pnt_CurX + 1),(pnt_CurY) );
-        if ( (curChar == ' ') || (curChar == 'S') || (curChar == '$') || (curChar == '&')){
+        if ( (curChar == ' ') || (curChar == 'S') || (curChar == '$') || (curChar == '&' || (curChar == 'H'))){
             pts_curTile = new MapTile();
+            pts_curTile.ChildXPosition = pnt_CurX;
+            pts_curTile.ChildYPosition = pnt_CurY;            
             pts_curTile.xposition = (pnt_CurX+1);
             pts_curTile.yposition = (pnt_CurY);
             pts_curTile.gValue = (pnt_CurG+1);
@@ -250,13 +307,28 @@ public class RunnerPather extends RunnerPathFind {
     boolean TileListContainsXY(ArrayList<MapTile> pts_InputList,
                                                   int inp_X,int inp_Y){
         boolean ReturnValue = false;
+        int tilelocation = -1;
+        tilelocation = TileListContainsXYAT(pts_InputList,inp_X,inp_Y);
+        if (tilelocation == -1){
+            ReturnValue = false;
+        }
+        else{
+            ReturnValue = true;
+        }
+        
+        return ReturnValue;
+    }
+
+    int TileListContainsXYAT(ArrayList<MapTile> pts_InputList,
+                                                  int inp_X,int inp_Y){
+        int ReturnValue = -1;
         MapTile lcl_MapTile = new MapTile();
         for (int i = 0; i < pts_InputList.size(); i++){
             lcl_MapTile = new MapTile();
             lcl_MapTile = pts_InputList.get(i);
             if( (lcl_MapTile.xposition == inp_X) && (lcl_MapTile.yposition == inp_Y) ){
                 TileListCheckTruePos = i;
-                ReturnValue = true;
+                ReturnValue = i;
             }
         }
         return ReturnValue;

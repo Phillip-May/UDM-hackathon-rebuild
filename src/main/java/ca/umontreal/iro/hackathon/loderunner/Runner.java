@@ -23,9 +23,9 @@ public class Runner extends BasicRunner {
     public static final int ERROR = -1;
         
     //Variable for current position in list of moves
-    int num_movespos = 0;
+    int num_movespos;
     //Empty Array List     
-    ArrayList<Integer> FinalMoves = new ArrayList<Integer>();
+    ArrayList<Integer> FinalMoves;
 
     
     //Room name
@@ -43,12 +43,15 @@ public class Runner extends BasicRunner {
         //First thing is to copy/save array so that it can used and modified
         RunnerPathFind Pathfinder = new RunnerPathFind();
         Pathfinder.SetMapArray(grid);
-
+        
         //Main algorythm to get find a path
         Pathfinder.PathFind();        
         
         //Get list of moves and store in an array
+        FinalMoves = new ArrayList<Integer>();
         FinalMoves = Pathfinder.GetMoveList();
+        //Also reset index in array
+        num_movespos = 0;
         
         System.out.println("Place Holder to check array conts with debugger");
         for (int i=0; i<grid.length; i++) {
