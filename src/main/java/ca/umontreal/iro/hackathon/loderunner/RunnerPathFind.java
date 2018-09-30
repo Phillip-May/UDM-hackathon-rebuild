@@ -15,11 +15,6 @@ import javax.lang.model.element.Element;
  * @author Admin123
  */
 public class RunnerPathFind extends Runner {
-    //Symbolic constants
-    private static final int UP = 1;
-    private static final int LEFT = 2;
-    private static final int DOWN = 3;
-    private static final int RIGHT = 4;
     
     //Test varialb
     int genericinteger = 1;
@@ -28,6 +23,8 @@ public class RunnerPathFind extends Runner {
     String[] map_maplocal;      
     //Array of moves to win
     int[] num_listofmoves = new int[500];
+    //New list of tiles to go to to win
+    ArrayList<Integer> MasterMoveList = new ArrayList<Integer>();
     //Position in array of moves, can be reset if moves are recalculated
     int num_movespos = 0;
     //Arrays of coordinates
@@ -49,7 +46,8 @@ public class RunnerPathFind extends Runner {
     int num_FactPos = 0;
     //Solved list
     int lst_CoinOrderSolved[] = new int[50]; 
-    
+    //Class for pathfinding
+    RunnerPather MapPToP;
     //Class constructor
     public RunnerPathFind(){
         
@@ -62,34 +60,14 @@ public class RunnerPathFind extends Runner {
         return 0;
     }
 
-    public int[] GetMoveList(){
-        ArrayList<Integer> mvs_masterlist = new ArrayList<Integer>();
-        //Fill arraylist with winning moves
-        for (int i = 0; i < num_movespos; i++){
-            mvs_masterlist.add(num_listofmoves[i]);
-        }
-        //Buffer to make end visible
-        mvs_masterlist.add(0);
-        mvs_masterlist.add(0);
-        mvs_masterlist.add(0);
-        //Zero means dont move
-        System.out.println("Returning winning array of size:");
-        System.out.println(num_movespos);    
-        //Convert ArrayList to integer array to return;
-        int i = 0;
-        int[] ArrayReturned = new int[mvs_masterlist.size()];
-        for (Integer n : mvs_masterlist) {
-            ArrayReturned[i++] = n;
-        }    
-
-        //Return array
-        return(ArrayReturned);
+    public ArrayList<Integer> GetMoveList(){
+        return MasterMoveList;
     }    
     
     public int PathFind() {
         //Create subclasses
         RunnerMapIO MapGetter = new RunnerMapIO();
-        RunnerPather MapPToP = new RunnerPather();
+        MapPToP = new RunnerPather();
         
         //Give it a copy of the map
         MapGetter.SetMapArray(map_maplocal);
@@ -106,8 +84,8 @@ public class RunnerPathFind extends Runner {
         num_coincount = MapGetter.GetCoinAmount();
         
         //Test path finding
-        MapPToP.GetTurnsTwoPoints(num_PlayerX,num_PlayerY,num_DoorX,num_DoorY);
-        //MapPToP.GetTurnsTwoPoints(15,5,12,5);
+        //MapPToP.FindTurnsTwoPoints(num_PlayerX,num_PlayerY,num_DoorX,num_DoorY);
+        //MapPToP.FindTurnsTwoPoints(15,5,12,5);
         
         
         //Calculate best order to get coins
@@ -117,41 +95,51 @@ public class RunnerPathFind extends Runner {
         num_movespos = 0;
         
         //Variables for pathfinding
-        int lcl_PlayerX = num_PlayerX;
-        int lcl_PlayerY = num_PlayerY;
         //Variable for current coin being targetted
         int cur_TargetCoin = 0;
+        int StartX = num_PlayerX;
+        int StartY = num_PlayerY;
+        int DestX = xpt_CoinXPos[lst_CoinOrderSolved[0]];
+        int DestY = ypt_CoinYPos[lst_CoinOrderSolved[0]];
+        int currentMove = -1;
         
-        for (int i = 0; i <= (num_coincount); i++){
+        ArrayList<Integer> temp;
+        //First go from start to coin 0
+        temp = new ArrayList<Integer>();
+        temp = MapPToP.GetMovesArrayTwoPoints(StartX, StartY, DestX, DestY);
+        MasterMoveList.addAll(temp);
+        
+        
+        //Find route to coins
+        for (int i = 1; i < (num_coincount+1); i++){
             cur_TargetCoin = lst_CoinOrderSolved[i];
-            while ( (lcl_PlayerX != xpt_CoinXPos[cur_TargetCoin]) || (lcl_PlayerY != ypt_CoinYPos[cur_TargetCoin]) ){
-                if (lcl_PlayerX > xpt_CoinXPos[cur_TargetCoin]){
-                    lcl_PlayerX--;
-                    num_listofmoves[num_movespos] = LEFT;
-                }
-                else if (lcl_PlayerX < xpt_CoinXPos[cur_TargetCoin]){
-                    lcl_PlayerX++;
-                    num_listofmoves[num_movespos] = RIGHT;
-                }
-                num_movespos++;
-            }
+            
+            StartX = DestX;
+            StartY = DestY;
+            DestX = xpt_CoinXPos[lst_CoinOrderSolved[i]];
+            DestY = ypt_CoinYPos[lst_CoinOrderSolved[i]];
+            
+            temp = new ArrayList<Integer>();
+            temp = MapPToP.GetMovesArrayTwoPoints(StartX, StartY, DestX, DestY);
+            MasterMoveList.addAll(temp);            
+            
+            
             System.out.println("Coin obtained, current x coord");
-            System.out.println(lcl_PlayerX);            
+            System.out.println(StartX);
         }
         //Finally add path to door.
-        while ( (lcl_PlayerX != num_DoorX) || (lcl_PlayerY != num_DoorY) ){
-            if (lcl_PlayerX > num_DoorX){
-                lcl_PlayerX--;
-                num_listofmoves[num_movespos] = LEFT;
-            }
-            else if (lcl_PlayerX < num_DoorX){
-                lcl_PlayerX++;
-                num_listofmoves[num_movespos] = RIGHT;
-            }
-            num_movespos++;
-        }
+        //Start x and y carry over from last coin
+        StartX = DestX;
+        StartY = DestY;
+        DestX = num_DoorX;
+        DestY = num_DoorY;
+        
+        temp = new ArrayList<Integer>();
+        temp = MapPToP.GetMovesArrayTwoPoints(StartX, StartY, DestX, DestY);        
+        MasterMoveList.addAll(temp);
+        
         System.out.println("Door reached");
-        System.out.println(lcl_PlayerX);
+        System.out.println(DestX);
         
         //Reset move position for movement code.
         System.out.println("X coords");
@@ -167,13 +155,14 @@ public class RunnerPathFind extends Runner {
      for(i=1;i<=number;i++){    
          fact=fact*i;    
      }    
-     return fact;
+    return fact;
     }
 
 
     
     //This sorts the coin by the most efficient way to grab them all
     //I kind of forgot to take the door into account whoops.
+    //Eventually implement this in pure function programming
     public int SortCoinList(){
         //The number of moves to beat.
         //For the inner loops
@@ -215,7 +204,7 @@ public class RunnerPathFind extends Runner {
         cur_BestMove = 1000;
         cur_Move = 1000;      
         for (int i = 0; i < (num_coincount+1); i++) {
-            cur_Move = GetMovesTwoPoints(xpt_CoinXPos[i], ypt_CoinYPos[i],
+            cur_Move = MapPToP.GetTurnsTwoPoints(xpt_CoinXPos[i], ypt_CoinYPos[i],
                                          num_DoorX, num_DoorY);
             //Check if coin i is better
             if (cur_Move < cur_BestMove) {
@@ -263,7 +252,7 @@ public class RunnerPathFind extends Runner {
                 //J is essentially the cur_arrposition
                 for (int i = j; i < (num_coincount); i++){
                     CoinBeingAnalysed = arrcastback[i];
-                    cur_Move = GetMovesTwoPoints(cur_playerX,cur_playerY,xpt_CoinXPos[CoinBeingAnalysed],ypt_CoinYPos[CoinBeingAnalysed]);
+                    cur_Move = MapPToP.GetTurnsTwoPoints(cur_playerX,cur_playerY,xpt_CoinXPos[CoinBeingAnalysed],ypt_CoinYPos[CoinBeingAnalysed]);
                     //Check if coin i is better
                     if (cur_Move < cur_BestMove) {
                         cur_BestMove = cur_Move;
@@ -293,15 +282,6 @@ public class RunnerPathFind extends Runner {
         
         }
         return 0;
-    }
-    
-    //Only takes x into account for now
-    //Will need to include ladders and walls
-    public int GetMovesTwoPoints(int inp_x1, int inp_y1,int inp_x2,
-                                    int inp_y2){
-        int result;
-        result = java.lang.Math.abs(inp_x1 - inp_x2);
-        return result;
     }
     
 }

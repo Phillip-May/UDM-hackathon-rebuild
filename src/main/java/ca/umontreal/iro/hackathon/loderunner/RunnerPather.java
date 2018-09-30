@@ -49,7 +49,6 @@ public class RunnerPather extends RunnerPathFind {
             }           
         }
 
-        System.out.println("Found charater is:");
         System.out.println(chr_ReturnData); 
         
         return chr_ReturnData;
@@ -73,23 +72,13 @@ public class RunnerPather extends RunnerPathFind {
             fValue = gValue+hValue;
             return fValue;
         }
-
-        public MapTile(){
-            xposition = 0;
-            yposition = 0;
-            //This should never stay -1
-            gValue = -1;
-            hValue = -1;
-            fValue = 0;
-            ChildXPosition = 0;
-            ChildYPosition = 0;
-        }
-    }    
+        
+    }
     
     //A star algorythm based off of this page
     //https://www.raywenderlich.com/4946/introduction-to-a-pathfinding
-    public int GetTurnsTwoPoints(int inp_x1, int inp_y1,int inp_x2,
-                                    int inp_y2){
+    public int FindTurnsTwoPoints(int inp_x1, int inp_y1,
+                                  int inp_x2,int inp_y2){
         pts_OpenList = new ArrayList<>();
         pts_ClosedList = new ArrayList<>();
         //Map Tile of the current x,y and g values
@@ -125,6 +114,7 @@ public class RunnerPather extends RunnerPathFind {
             //Check if destination sqaure is in closed list
             currentComparison = TileListContainsXY(pts_ClosedList,inp_x2,inp_y2);
             if (currentComparison == true){
+                System.out.println("Valid path found.");
                 break;
             }
             
@@ -158,6 +148,56 @@ public class RunnerPather extends RunnerPathFind {
         } while(pts_OpenList.isEmpty() == false);
         return 0;   
     }
+    public int GetTurnsTwoPoints(int inp_x1, int inp_y1,int inp_x2,
+                                    int inp_y2){
+        //Pathfind between two points
+        FindTurnsTwoPoints(inp_x1,inp_y1,inp_x2,inp_y2);
+        
+        
+        return pts_ClosedList.size();
+    }
+    
+    public ArrayList<Integer> GetMovesArrayTwoPoints(int inp_x1, int inp_y1,int inp_x2,
+                                    int inp_y2){
+        FindTurnsTwoPoints(inp_x1,inp_y1,inp_x2,inp_y2);
+        ArrayList<Integer> ReturnedList = new ArrayList<Integer>();
+        int lastx,lasty,nextx,nexty;
+        
+        for (int i = 0; i < (pts_ClosedList.size()-1); i++){
+            lastx = pts_ClosedList.get(i).xposition;
+            lasty = pts_ClosedList.get(i).yposition;
+            nextx = pts_ClosedList.get(i+1).xposition;
+            nexty = pts_ClosedList.get(i+1).yposition;
+            //Up
+            if (nexty > lasty){
+                ReturnedList.add(UP);
+            }
+            //Down
+            else if (nexty < lasty){
+                ReturnedList.add(DOWN);
+            }
+            //Left
+            else if (nextx < lastx){
+                ReturnedList.add(LEFT);
+            }            
+            //Right
+            else if (nextx > lasty){
+                ReturnedList.add(RIGHT);
+            }
+            //Dig
+            else if (nextx > lasty){
+                ReturnedList.add(DIG);
+            }                
+            //Error
+            else if (nextx > lasty){
+                ReturnedList.add(ERROR);
+            }
+        }
+                
+        return ReturnedList;
+    }
+    
+    
     
     //Given A Map tiles returns an arraylist of all adjacent walkable tiles
     private ArrayList<MapTile> GetAdjacentTiles(MapTile inp_CurrentTile){

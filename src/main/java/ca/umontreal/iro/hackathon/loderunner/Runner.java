@@ -14,16 +14,18 @@ import javax.lang.model.element.Element;
  *
  */
 public class Runner extends BasicRunner {
-    //Symbolic constants
-    private static final int UP = 1;
-    private static final int LEFT = 2;
-    private static final int DOWN = 3;
-    private static final int RIGHT = 4;
+    //Symbolic constants for moving
+    public static final int UP = 1;
+    public static final int LEFT = 2;
+    public static final int DOWN = 3;
+    public static final int RIGHT = 4;
+    public static final int DIG = 5;
+    public static final int ERROR = -1;
+        
     //Variable for current position in list of moves
     int num_movespos = 0;
-    //Empty Array List
-    //List<Integer> mvs_MasterList = new ArrayList<>();        
-    int[] mvs_MasterList;        
+    //Empty Array List     
+    ArrayList<Integer> FinalMoves = new ArrayList<Integer>();
 
     
     //Room name
@@ -46,8 +48,7 @@ public class Runner extends BasicRunner {
         Pathfinder.PathFind();        
         
         //Get list of moves and store in an array
-        mvs_MasterList = Pathfinder.GetMoveList();
-        
+        FinalMoves = Pathfinder.GetMoveList();
         
         System.out.println("Place Holder to check array conts with debugger");
         for (int i=0; i<grid.length; i++) {
@@ -70,10 +71,15 @@ public class Runner extends BasicRunner {
         }
         
         System.out.println("Position du runner : (" + x + ", " + y + ")");
-        
-        //Important line to fix
-        Direction dir = Direction.fromInt(mvs_MasterList[num_movespos]);
-        
+        Direction dir = Direction.fromInt(0);
+        int i=0;
+        //Important lines to fix
+        if (num_movespos<=(FinalMoves.size()-1)){
+            dir = Direction.fromInt(FinalMoves.get(num_movespos));
+        }
+        else {
+            dir = Direction.fromInt((int) (0));
+        }
         //int direction = (int) (Math.random() * 4 + 1);
         //Direction dir = Direction.fromInt(direction);
         
