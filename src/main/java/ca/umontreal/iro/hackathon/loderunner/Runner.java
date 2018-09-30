@@ -19,39 +19,48 @@ public class Runner extends BasicRunner {
     public static final int LEFT = 2;
     public static final int DOWN = 3;
     public static final int RIGHT = 4;
-    public static final int DIG = 5;
+    public static final int DIGLEFT = 5;
+    public static final int DIGRIGHT = 5;
     public static final int ERROR = -1;
         
     //Variable for current position in list of moves
-    int num_movespos;
+    public static int iFinalMoves;
     //Empty Array List     
-    ArrayList<Integer> FinalMoves;
-
+    public static ArrayList<Integer> mvsFinalMoves;
+    //Variables that store the original and modified ascii maps
+    public static String[] mpMapOriginal;
+    public static String[] mpMapCurrent; 
     
+    
+    //Variables that I did not make
     //Room name
     public static final String ROOM = "Main4";
     public static final int START_LEVEL = 1;
-
     
+    //Constructor from template
     public Runner() {
         super(ROOM, START_LEVEL);
     }
 
+    //Basically my constructor
     @Override
     public void start(String[] grid) {
         System.out.println("Nouveau niveau ! Grille initiale reçue :");
         //First thing is to copy/save array so that it can used and modified
+        mpMapOriginal = grid.clone();
+        mpMapCurrent = grid.clone();
+        
+        //Next code to figure out how to solve this map
         RunnerPathFind Pathfinder = new RunnerPathFind();
-        Pathfinder.SetMapArray(grid);
         
         //Main algorythm to get find a path
         Pathfinder.PathFind();        
         
         //Get list of moves and store in an array
-        FinalMoves = new ArrayList<Integer>();
-        FinalMoves = Pathfinder.GetMoveList();
+        mvsFinalMoves = new ArrayList<Integer>();
+        mvsFinalMoves = Pathfinder.GetMoveList();
         //Also reset index in array
-        num_movespos = 0;
+        iFinalMoves = 0;
         
         System.out.println("Place Holder to check array conts with debugger");
         for (int i=0; i<grid.length; i++) {
@@ -59,7 +68,8 @@ public class Runner extends BasicRunner {
             System.out.println(ligne);
         }
     }
-
+    
+    //The method that's run every move
     @Override
     public Move next(int x, int y) {
         
@@ -77,8 +87,8 @@ public class Runner extends BasicRunner {
         Direction dir = Direction.fromInt(0);
         int i=0;
         //Important lines to fix
-        if (num_movespos<=(FinalMoves.size()-1)){
-            dir = Direction.fromInt(FinalMoves.get(num_movespos));
+        if (iFinalMoves<=(mvsFinalMoves.size()-1)){
+            dir = Direction.fromInt(mvsFinalMoves.get(iFinalMoves));
         }
         else {
             dir = Direction.fromInt((int) (0));
@@ -87,8 +97,8 @@ public class Runner extends BasicRunner {
         //Direction dir = Direction.fromInt(direction);
         
         System.out.println("Last move executed");
-        System.out.println(num_movespos);
-        num_movespos++;
+        System.out.println(iFinalMoves);
+        iFinalMoves++;
         return new Move(Event.MOVE, dir);
     }
 

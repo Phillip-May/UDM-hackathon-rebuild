@@ -14,10 +14,7 @@ import javax.lang.model.element.Element;
  *
  * @author Admin123
  */
-public class RunnerPathFind extends Runner {
-    
-    //Test varialb
-    int genericinteger = 1;
+public class RunnerPathFind extends RunnerMapIO {
     //Variables
     //Local version of the map
     String[] map_maplocal;      
@@ -68,10 +65,7 @@ public class RunnerPathFind extends Runner {
         //Create subclasses
         RunnerMapIO MapGetter = new RunnerMapIO();
         MapPToP = new RunnerPather();
-        
-        //Give it a copy of the map
-        MapGetter.SetMapArray(map_maplocal);
-        MapPToP.SetASCIIMapArray(map_maplocal);
+
         //Generate data based on map data
         MapGetter.FindStuff();
         //Grab variables from sub class
@@ -107,6 +101,7 @@ public class RunnerPathFind extends Runner {
         //First go from start to coin 0
         temp = new ArrayList<Integer>();
         temp = MapPToP.GetMovesArrayTwoPoints(StartX, StartY, DestX, DestY);
+        
         MasterMoveList.addAll(temp);
         
         

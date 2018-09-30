@@ -12,14 +12,9 @@ import java.util.ArrayList;
  * @author Admin123
  */
 public class RunnerPather extends RunnerPathFind {
-    
-    //Stores the map data
-    String[] map_maplocalASCII;
-    int destX;
-    int destY;
-    ArrayList<MapTile> pts_OpenList;
-    ArrayList<MapTile> pts_ClosedList;
-    int TileListCheckTruePos;
+    //Map data is stored in Runner class
+    private ArrayList<MapTile> pts_OpenList;
+    private ArrayList<MapTile> pts_ClosedList;
     
     //Class constructor
     public RunnerPather(){
@@ -27,7 +22,7 @@ public class RunnerPather extends RunnerPathFind {
     }
     
     public int SetASCIIMapArray(String[] inp_StartGrid){
-        map_maplocalASCII = inp_StartGrid.clone();
+        super.mpMapCurrent = inp_StartGrid.clone();
         return 0;
     }
 
@@ -41,8 +36,8 @@ public class RunnerPather extends RunnerPathFind {
         //My invalid character will be lowercase z 'z'
         chr_ReturnData = 'z';
         
-        if ( (inp_y < map_maplocalASCII.length) && (inp_x >= 0)){
-            String str_line = map_maplocalASCII[inp_y];
+        if ( (inp_y < super.mpMapCurrent.length) && (inp_x >= 0)){
+            String str_line = super.mpMapCurrent[inp_y];
             //Make sure the x value is valid as well.
             if ( (inp_x < str_line.length() ) && (inp_x >= 0)) {
                 chr_ReturnData =str_line.charAt(inp_x);    
@@ -63,8 +58,8 @@ public class RunnerPather extends RunnerPathFind {
         //Estimate ignores terain and simply finds absolute distance
         private int fValue;
         //The tile from which this one was accessed
-        int ChildXPosition;
-        int ChildYPosition;
+        int ChildXPosition = -1;
+        int ChildYPosition = -1;
         
         public int GetfValue(){
             fValue = gValue+hValue;
@@ -96,8 +91,8 @@ public class RunnerPather extends RunnerPathFind {
         int compY = -1;
         
         //Save destination to global
-        destX = inp_x2;
-        destY = inp_y2;
+        //destX = inp_x2;
+        //destY = inp_y2;
 
         //Add original to open list
         pts_OpenList.add(pnt_CurrentTile);
@@ -118,7 +113,7 @@ public class RunnerPather extends RunnerPathFind {
                 break;
             }
             
-            pts_AdjacentTiles = GetAdjacentTiles(pnt_CurrentBestTile);
+            pts_AdjacentTiles = GetAdjacentTiles(pnt_CurrentBestTile,inp_x2,inp_y2);
             for (int i = 0; i < pts_AdjacentTiles.size(); i++){
                 pnt_curTile = new MapTile();
                 pnt_curTile = pts_AdjacentTiles.get(i);
@@ -135,12 +130,14 @@ public class RunnerPather extends RunnerPathFind {
                 else {
                     int curItemGscore;
                     int curListGscore;                
+                    int curIndex;
                     MapTile GscoreComparsion = new MapTile();
-                    GscoreComparsion = pts_OpenList.get(TileListCheckTruePos);
+                    curIndex = TileListContainsXYAT(pts_OpenList,compX,compY);
+                    GscoreComparsion = pts_OpenList.get(curIndex);
                     curItemGscore = pnt_curTile.gValue;
                     curListGscore = GscoreComparsion.gValue;
                     if (curItemGscore < curListGscore){
-                        pts_OpenList.remove(TileListCheckTruePos);
+                        pts_OpenList.remove(curIndex);
                         pts_OpenList.add(pnt_curTile);
                     }
                 }
@@ -155,12 +152,12 @@ public class RunnerPather extends RunnerPathFind {
     }
     public int GetTurnsTwoPoints(int inp_x1, int inp_y1,int inp_x2,
                                     int inp_y2){
-        //Pathfind between two points
-        FindTurnsTwoPoints(inp_x1,inp_y1,inp_x2,inp_y2);
-        int ind_last = pts_ClosedList.size();
-        int returnvalue = pts_ClosedList.get(ind_last-1).gValue;
+        //Pathfind between two points reduced to an array of moves
+        ArrayList<Integer> temp;
+        temp = GetMovesArrayTwoPoints(inp_x1,inp_y1,inp_x2,inp_y2);
+        int ind_last = temp.size();
         
-        return returnvalue;
+        return ind_last;
     }
     
     public ArrayList<Integer> GetMovesArrayTwoPoints(int inp_x1, int inp_y1,int inp_x2,
@@ -177,6 +174,11 @@ public class RunnerPather extends RunnerPathFind {
         //Add the first tile
         ind_nextTile = TileListContainsXYAT(pts_ClosedList,inp_x2,inp_y2);
         SolvedListSimple.add( pts_ClosedList.get(ind_nextTile) );
+        
+        //Check if the array was of size (start and end where the same)
+        if (ind_nextTile == 0){
+            return ReturnedList;
+        }
         
         int cur_gvalue = pts_ClosedList.get(closedsize-1).gValue;
         lastx = pts_ClosedList.get(closedsize-1).ChildXPosition;      
@@ -196,10 +198,16 @@ public class RunnerPather extends RunnerPathFind {
             nextx = pts_ClosedList.get(ind_nextTile).ChildXPosition;      
             nexty = pts_ClosedList.get(ind_nextTile).ChildYPosition;
             cur_gvalue = pts_ClosedList.get(ind_nextTile).gValue;
-            ind_nextTile = TileListContainsXYAT(pts_ClosedList,nextx,nexty);            
+            ind_nextTile = TileListContainsXYAT(pts_ClosedList,nextx,nexty);
+            if ( (nextx == -1) || (nexty == -1) ){
+                break;
+            }
         }
         //Add the last tile
-        SolvedListSimple.add( pts_ClosedList.get(ind_nextTile) );      
+        if ( (nextx != -1) || (nexty != -1) ){
+            SolvedListSimple.add( pts_ClosedList.get(ind_nextTile) );
+        }        
+      
         //Now get moves from the simplified list
         
         for (int i = (SolvedListSimple.size()-1); i > 0; i--){
@@ -225,7 +233,7 @@ public class RunnerPather extends RunnerPathFind {
             }
             //Dig
             else if (nextx > lasty){
-                ReturnedList.add(DIG);
+                ReturnedList.add(DIGLEFT);
             }                
             //Error
             else {
@@ -238,8 +246,9 @@ public class RunnerPather extends RunnerPathFind {
     
     
     
-    //Given A Map tiles returns an arraylist of all adjacent walkable tiles
-    private ArrayList<MapTile> GetAdjacentTiles(MapTile inp_CurrentTile){
+    //Given A Map tile returns an arraylist of all adjacent walkable tiles
+    //Takes destination x an y in order to estimate h value
+    private ArrayList<MapTile> GetAdjacentTiles(MapTile inp_CurrentTile, int destX, int destY){
         ArrayList<MapTile> pts_AdjacentTiles = new ArrayList<>();
         int pnt_CurX = inp_CurrentTile.xposition;
         int pnt_CurY = inp_CurrentTile.yposition;
@@ -327,7 +336,6 @@ public class RunnerPather extends RunnerPathFind {
             lcl_MapTile = new MapTile();
             lcl_MapTile = pts_InputList.get(i);
             if( (lcl_MapTile.xposition == inp_X) && (lcl_MapTile.yposition == inp_Y) ){
-                TileListCheckTruePos = i;
                 ReturnValue = i;
             }
         }
@@ -358,6 +366,8 @@ public class RunnerPather extends RunnerPathFind {
         absoluteX = Math.abs(inp_x1-inp_x2);
         absoluteY = Math.abs(inp_y1-inp_y2);
         returnHValue = absoluteX+absoluteY;
+        
+        super.GetDoorY();
         
         return returnHValue;
     }
