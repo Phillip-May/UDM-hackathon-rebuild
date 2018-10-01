@@ -1,5 +1,6 @@
 package ca.umontreal.iro.hackathon.loderunner;
 
+import static ca.umontreal.iro.hackathon.loderunner.CombinationFinder.choose;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -68,12 +69,13 @@ public class RunnerPathFind extends RunnerMapIO {
         num_coincount = iCoinsFromMap();
         
         //Test path finding
-        MapPToP.FindTurnsTwoPoints(8,2,21,5);
+        //MapPToP.FindTurnsTwoPoints(8,2,21,5);
         //MapPToP.FindTurnsTwoPoints(15,5,12,5);
         
         
         //Calculate best order to get coins
-        //This sorts the array so that the best coin to get first is on top.        
+        //This sorts the array so that the best coin to get first is on top. 
+        SortCoinListV2();
         SortCoinList();
         //This was a thing I moved
         num_movespos = 0;
@@ -148,6 +150,120 @@ public class RunnerPathFind extends RunnerMapIO {
     //This sorts the coin by the most efficient way to grab them all
     //I kind of forgot to take the door into account whoops.
     //Eventually implement this in pure function programming
+    public ArrayList<ArrayList<Integer>> SortCoinListV2(){
+        int ceCoins,xvDoor,yvDoor;
+        int cBestTurns;
+        int cCurrentTurns;
+        int cCurrentTotalTurns;
+        int cBestTotalTurns;
+        int iBestCoinCombination;
+        int iBestCoin;
+        int iComparisonCoin;
+        int inp_x1,inp_y1,inp_x2,inp_y2;
+        int iCurStart,iCurDest;
+        ArrayList<Integer> xvpOriginalCoins;
+        ArrayList<Integer> yvpOriginalCoins;
+        ArrayList<Integer> xvpSolvedCoins;
+        ArrayList<Integer> yvpSolvedCoins;
+        ArrayList<Integer> rgiCurrentCombination;
+        xvpOriginalCoins = xypCoinsFromMap().get(0);
+        yvpOriginalCoins = xypCoinsFromMap().get(1);
+        ceCoins = xvpOriginalCoins.size();
+        xvDoor = xvDoorFromMap();
+        yvDoor = yvDoorFromMap();
+        cBestTurns = 1000;
+        cCurrentTurns = 0; 
+        iBestCoin = -1;
+        iBestCoinCombination = -1;
+        cCurrentTotalTurns = -1;
+        //Coin nearest the door will always be last so that can be found first.
+        for (int i = 0; i < (ceCoins); i++) {
+            cCurrentTurns = MapPToP.GetTurnsTwoPoints(xvpOriginalCoins.get(i),
+                                                      yvpOriginalCoins.get(i),
+                                                      xvDoor, yvDoor);
+            //Check if coin i is better
+            if (cCurrentTurns < cBestTurns) {
+                cBestTurns = cCurrentTurns;
+                iBestCoin = i;
+            }
+        }
+        System.out.println("V2: Best coin to go last:"+iBestCoin);        
+        //Enumerate test
+        ArrayList<ArrayList<Integer>> ipEnumeratedIndexes;
+        ArrayList<Integer> rgIndices = new ArrayList<> ();
+        for (int i =0; i < xvpOriginalCoins.size(); i ++){
+            rgIndices.add(i);
+        }
+        ipEnumeratedIndexes = choose(rgIndices, rgIndices.size());
+        System.out.println(ipEnumeratedIndexes);
+        for (int k= 0; k < ipEnumeratedIndexes.size(); k++) {
+            iComparisonCoin = ipEnumeratedIndexes.get(k).get(ceCoins-1);
+            if (iComparisonCoin != iBestCoin) {
+                //If last element is not coin closest to do don't bother
+                //Check other possible routes
+                continue;
+            }
+            cCurrentTotalTurns = 0;
+            cBestTotalTurns = 1000;
+            rgiCurrentCombination = ipEnumeratedIndexes.get(k);
+            for (int j = 0; j < (rgiCurrentCombination.size() ); j++){
+                iCurStart = rgiCurrentCombination.get(j);
+                inp_x1 = xvpOriginalCoins.get(iCurStart);
+                inp_y1 = yvpOriginalCoins.get(iCurStart);
+                //Destination is next coin except for last case where it's door
+                if (j < (rgiCurrentCombination.size() - 1)){
+                    iCurDest = rgiCurrentCombination.get(j+1);                    
+                    inp_x2 = xvpOriginalCoins.get(iCurDest);
+                    inp_y2 = yvpOriginalCoins.get(iCurDest);    
+                }
+                else {
+                    inp_x2 = xvDoorFromMap();
+                    inp_y2 = yvDoorFromMap();                    
+                }
+                cCurrentTurns = MapPToP.GetTurnsTwoPoints(inp_x1,inp_y1,
+                                                          inp_x2,inp_y2);
+                cCurrentTotalTurns = cCurrentTotalTurns + cCurrentTurns;                
+            }
+            //Check if combination k is better
+            if (cCurrentTotalTurns < cBestTotalTurns) {
+                cBestTotalTurns = cCurrentTotalTurns;
+                iBestCoinCombination = k;
+            }            
+            System.out.println("V2 consider");
+        }
+        System.out.println("The best combination of coins was k=:"+iBestCoinCombination);
+        System.out.println("That combination being:");
+        rgiCurrentCombination = ipEnumeratedIndexes.get(iBestCoinCombination);
+        System.out.println(rgiCurrentCombination);
+        System.out.println("And it should take this many turns+");
+        System.out.println(cCurrentTotalTurns);
+        
+        //Now pack the new best x and y together and return the packed list
+        ArrayList< ArrayList<Integer> > xypCoinsSolved;
+        xypCoinsSolved = new ArrayList<>();
+        //Pack the x values
+        xvpSolvedCoins = new ArrayList<Integer>();
+        for (int i = 0; i < ceCoins; i++){
+            iComparisonCoin = rgiCurrentCombination.get(i);
+            xvpSolvedCoins.add( xvpOriginalCoins.get(iComparisonCoin) );
+            
+        }
+        //Pack the y values
+        yvpSolvedCoins = new ArrayList<Integer>();
+        for (int i = 0; i < ceCoins; i++){
+            iComparisonCoin = rgiCurrentCombination.get(i);
+            yvpSolvedCoins.add( yvpOriginalCoins.get(iComparisonCoin) );
+            
+        }        
+        //Pack the two array lists together
+        xypCoinsSolved.add(xvpSolvedCoins);
+        xypCoinsSolved.add(yvpSolvedCoins);        
+        
+        
+        return xypCoinsSolved;
+    }
+    
+    
     public int SortCoinList(){
         //The number of moves to beat.
         //For the inner loops

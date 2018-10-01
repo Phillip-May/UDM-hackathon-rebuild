@@ -13,7 +13,7 @@ public class CombinationFinder extends Runner {
         return allPermutations;
     }
 
-  // a is the original array
+    // a is the original array
     // n is the array size
     // k is the number of elements in each permutation
     // allPermutations is all different permutations
@@ -42,7 +42,7 @@ public class CombinationFinder extends Runner {
     }
 
 
-  // sample client
+    // sample client
     public static void main(String[] args) {
 
       // n is the end item of the array.
