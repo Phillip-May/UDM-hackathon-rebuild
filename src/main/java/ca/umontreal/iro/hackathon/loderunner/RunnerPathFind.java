@@ -50,7 +50,6 @@ public class RunnerPathFind extends RunnerMapIO {
         ArrayList<Integer> yvpCoinMaster;
         xvpCoinMaster = SortCoinListV2().get(0);
         yvpCoinMaster = SortCoinListV2().get(1);
-
         
         //First go from start to coin 0
         int cur_TargetCoin = 0;

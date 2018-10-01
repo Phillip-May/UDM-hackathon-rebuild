@@ -11,34 +11,13 @@ import java.util.ArrayList;
  *
  * @author Admin123
  */
-public class RunnerPather extends RunnerPathFind {
+public class RunnerPather extends RunnerWalkableTiles {
     //Map data is stored in Runner class
     private ArrayList<MapTile> pts_OpenList;
     private ArrayList<MapTile> pts_ClosedList;
     
     //Class constructor
     public RunnerPather(){
-        
-    } 
-    
-    //Class for storing map tile data
-    public class MapTile {
-        int xposition;
-        int yposition;
-        //Number of turns to get to from start position
-        int gValue;
-        //Estimate of turns from here to destination
-        int hValue;
-        //Estimate ignores terain and simply finds absolute distance
-        private int fValue;
-        //The tile from which this one was accessed
-        int ChildXPosition = -1;
-        int ChildYPosition = -1;
-        
-        public int GetfValue(){
-            fValue = gValue+hValue;
-            return fValue;
-        }
         
     }
     
@@ -55,6 +34,8 @@ public class RunnerPather extends RunnerPathFind {
         ArrayList<MapTile> pts_AdjacentTiles = new ArrayList<>();
         MapTile pnt_CurrentBestTile = new MapTile();
         MapTile pnt_curTile;
+        //Debug char
+        char chDebug;
         
         //Start
         pnt_CurrentTile.xposition = inp_x1;
@@ -64,9 +45,8 @@ public class RunnerPather extends RunnerPathFind {
         int compX = -1;
         int compY = -1;
         
-        //Save destination to global
-        //destX = inp_x2;
-        //destY = inp_y2;
+        //Instantitate class for finding adjacent walkable tiles
+        //Debug call
 
         //Add original to open list
         pts_OpenList.add(pnt_CurrentTile);
@@ -78,6 +58,15 @@ public class RunnerPather extends RunnerPathFind {
             pts_ClosedList.add(pnt_CurrentBestTile);
             //Remove it from the open list
             pts_OpenList.remove(pnt_CurrentBestTile);
+            
+            //Debug breakpoint checks
+            //if these trigger shit went wrong
+            if (pnt_CurrentBestTile.xposition == 0){
+                chDebug = 'a';
+            }
+            if (pnt_CurrentBestTile.yposition == 0){
+                chDebug = 'b';
+            }            
             
             //Check if destination sqaure is in closed list
             currentComparison = TileListContainsXY(pts_ClosedList,inp_x2,inp_y2);
@@ -235,89 +224,7 @@ public class RunnerPather extends RunnerPathFind {
     
     
     
-    //Given A Map tile returns an arraylist of all adjacent walkable tiles
-    //Takes destination x an y in order to estimate h value
-    private ArrayList<MapTile> GetAdjacentTiles(MapTile inp_CurrentTile, int destX, int destY){
-        ArrayList<MapTile> pts_AdjacentTiles = new ArrayList<>();
-        int pnt_CurX = inp_CurrentTile.xposition;
-        int pnt_CurY = inp_CurrentTile.yposition;
-        int pnt_CurG = inp_CurrentTile.gValue;
-        MapTile pts_curTile = new MapTile();
-        int curHValue = -1;
-        curHValue = hValueEstimation(1,1,6,6);
-        char curChar;
-        char curChar2;
-        
-        //Up
-        curChar = GetCharFromPosition( (pnt_CurX),(pnt_CurY-1) );
-        if ( (curChar == 'H') ){
-            pts_curTile = new MapTile();
-            pts_curTile.ChildXPosition = pnt_CurX;
-            pts_curTile.ChildYPosition = pnt_CurY;        
-            pts_curTile.xposition = (pnt_CurX);
-            pts_curTile.yposition = (pnt_CurY-1);
-            pts_curTile.gValue = (pnt_CurG+1);
-            //hValue estimation (a^2+b^2=c^2)
-            curHValue = hValueEstimation(pnt_CurX,pnt_CurY+1,destX,destY);
-            //Save HValue
-            pts_curTile.hValue = curHValue;
-            //Add it to the array list
-            pts_AdjacentTiles.add(pts_curTile);
-        }      
-        //Down
-        curChar = GetCharFromPosition( (pnt_CurX),(pnt_CurY+1) );
-        if ( (curChar == 'H') || (curChar == ' ')){
-            pts_curTile = new MapTile();
-            pts_curTile.ChildXPosition = pnt_CurX;
-            pts_curTile.ChildYPosition = pnt_CurY;        
-            pts_curTile.xposition = (pnt_CurX);
-            pts_curTile.yposition = (pnt_CurY+1);
-            pts_curTile.gValue = (pnt_CurG+1);
-            //hValue estimation (a^2+b^2=c^2)
-            curHValue = hValueEstimation(pnt_CurX,pnt_CurY+1,destX,destY);
-            //Save HValue
-            pts_curTile.hValue = curHValue;
-            //Add it to the array list
-            pts_AdjacentTiles.add(pts_curTile);
-        }        
-        //Left (-x)
-        //Check if adjacent tile is moveable
-        curChar = GetCharFromPosition( (pnt_CurX - 1),(pnt_CurY) );
-        curChar2 = GetCharFromPosition( (pnt_CurX - 1),(pnt_CurY-1) );
-        if ( (curChar == ' ') || (curChar == 'S') || (curChar == '$') || (curChar == '&') || (curChar == 'H')|| (curChar == '-')){
-            pts_curTile = new MapTile();
-            pts_curTile.ChildXPosition = pnt_CurX;
-            pts_curTile.ChildYPosition = pnt_CurY;
-            pts_curTile.xposition = (pnt_CurX-1);
-            pts_curTile.yposition = (pnt_CurY);
-            pts_curTile.gValue = (pnt_CurG+1);
-            //hValue estimation (a^2+b^2=c^2)
-            curHValue = hValueEstimation(pnt_CurX-1,pnt_CurY,destX,destY);
-            //Save HValue
-            pts_curTile.hValue = curHValue;
-            //Add it to the array list
-            pts_AdjacentTiles.add(pts_curTile);
-        }
-        //Right (+x)
-        curChar = GetCharFromPosition( (pnt_CurX + 1),(pnt_CurY) );
-        curChar2 = GetCharFromPosition( (pnt_CurX - 1),(pnt_CurY-1) );
-        if ( (curChar == ' ') || (curChar == 'S') || (curChar == '$') || (curChar == '&') || (curChar == 'H') || (curChar == '-')){
-            pts_curTile = new MapTile();
-            pts_curTile.ChildXPosition = pnt_CurX;
-            pts_curTile.ChildYPosition = pnt_CurY;            
-            pts_curTile.xposition = (pnt_CurX+1);
-            pts_curTile.yposition = (pnt_CurY);
-            pts_curTile.gValue = (pnt_CurG+1);
-            //hValue estimation (a^2+b^2=c^2)
-            curHValue = hValueEstimation(pnt_CurX+1,pnt_CurY,destX,destY);            
-            //Save HValue
-            pts_curTile.hValue = curHValue;            
-            //Add it to the array list
-            pts_AdjacentTiles.add(pts_curTile);
-        }         
-        
-        return pts_AdjacentTiles;
-    }
+
     
     boolean TileListContainsXY(ArrayList<MapTile> pts_InputList,
                                                   int inp_X,int inp_Y){
@@ -362,19 +269,6 @@ public class RunnerPather extends RunnerPathFind {
         }
         
         return returnedTile;
-    }
+    }  
     
-    int hValueEstimation(int inp_x1,int inp_y1,int inp_x2,int inp_y2){
-        int absoluteX;
-        int absoluteY;
-        int returnHValue;
-        
-        absoluteX = Math.abs(inp_x1-inp_x2);
-        absoluteY = Math.abs(inp_y1-inp_y2);
-        returnHValue = absoluteX+absoluteY;
-        
-        super.yvDoorFromMap();
-        
-        return returnHValue;
-    }
 }
