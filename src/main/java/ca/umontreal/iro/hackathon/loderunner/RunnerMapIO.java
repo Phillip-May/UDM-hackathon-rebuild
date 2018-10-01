@@ -39,7 +39,7 @@ public class RunnerMapIO extends Runner{
     public int yvPlayerFromMap(){
         int yvPlayer = xyvPlayerFromMap()[1];
         return yvPlayer;
-    }
+    } 
     
     public int[] rgxvCoinsFromMap(){
         ArrayList<Integer> temp;

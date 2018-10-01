@@ -35,7 +35,7 @@ public class Runner extends BasicRunner {
     //Variables that I did not make
     //Room name
     public static final String ROOM = "Main4";
-    public static final int START_LEVEL = 1;
+    public static final int START_LEVEL = 2;
     
     //Constructor from template
     public Runner() {

@@ -51,12 +51,6 @@ public class RunnerPathFind extends RunnerMapIO {
         
     }
 
-    //Set the map to use (an array of strings)
-    public int SetMapArray(String[] inp_StartGrid){
-        map_maplocal = inp_StartGrid.clone();
-        return 0;
-    }
-
     public ArrayList<Integer> GetMoveList(){
         return MasterMoveList;
     }    
@@ -74,7 +68,7 @@ public class RunnerPathFind extends RunnerMapIO {
         num_coincount = iCoinsFromMap();
         
         //Test path finding
-        //MapPToP.FindTurnsTwoPoints(num_PlayerX,num_PlayerY,num_DoorX,num_DoorY);
+        MapPToP.FindTurnsTwoPoints(8,2,21,5);
         //MapPToP.FindTurnsTwoPoints(15,5,12,5);
         
         

@@ -19,13 +19,7 @@ public class RunnerPather extends RunnerPathFind {
     //Class constructor
     public RunnerPather(){
         
-    }
-    
-    public int SetASCIIMapArray(String[] inp_StartGrid){
-        super.mpMapCurrent = inp_StartGrid.clone();
-        return 0;
-    }
-   
+    } 
     
     //Class for storing map tile data
     public class MapTile {
@@ -126,16 +120,31 @@ public class RunnerPather extends RunnerPathFind {
         //Check if it found a path of stop trying
         if (foundapath == false){
             System.out.println("Shit went wrong.");
+            System.out.println("Path find start x and y");
+            System.out.println(inp_x1);
+            System.out.println(inp_y1);
+            System.out.println("Path find end x and y");
+            System.out.println(inp_x2);
+            System.out.println(inp_y2);
+            return -1;
         }
-        
         return 0;   
     }
     public int GetTurnsTwoPoints(int inp_x1, int inp_y1,int inp_x2,
                                     int inp_y2){
-        //Pathfind between two points reduced to an array of moves
-        ArrayList<Integer> temp;
-        temp = GetMovesArrayTwoPoints(inp_x1,inp_y1,inp_x2,inp_y2);
-        int ind_last = temp.size();
+        //Pathfind between two points reduced to the number of moves
+        //First make sure that path is possible
+        int ind_last;
+        int temperror;
+        temperror = FindTurnsTwoPoints(inp_x1,inp_y1,inp_x2,inp_y2);
+        if (temperror == 0){
+            ArrayList<Integer> temp;
+            temp = GetMovesArrayTwoPoints(inp_x1,inp_y1,inp_x2,inp_y2);
+            ind_last = temp.size();            
+        }
+        else {
+            ind_last = 1000;
+        }
         
         return ind_last;
     }
@@ -237,6 +246,7 @@ public class RunnerPather extends RunnerPathFind {
         int curHValue = -1;
         curHValue = hValueEstimation(1,1,6,6);
         char curChar;
+        char curChar2;
         
         //Up
         curChar = GetCharFromPosition( (pnt_CurX),(pnt_CurY-1) );
@@ -255,11 +265,26 @@ public class RunnerPather extends RunnerPathFind {
             pts_AdjacentTiles.add(pts_curTile);
         }      
         //Down
-        
+        curChar = GetCharFromPosition( (pnt_CurX),(pnt_CurY+1) );
+        if ( (curChar == 'H') || (curChar == ' ')){
+            pts_curTile = new MapTile();
+            pts_curTile.ChildXPosition = pnt_CurX;
+            pts_curTile.ChildYPosition = pnt_CurY;        
+            pts_curTile.xposition = (pnt_CurX);
+            pts_curTile.yposition = (pnt_CurY+1);
+            pts_curTile.gValue = (pnt_CurG+1);
+            //hValue estimation (a^2+b^2=c^2)
+            curHValue = hValueEstimation(pnt_CurX,pnt_CurY+1,destX,destY);
+            //Save HValue
+            pts_curTile.hValue = curHValue;
+            //Add it to the array list
+            pts_AdjacentTiles.add(pts_curTile);
+        }        
         //Left (-x)
         //Check if adjacent tile is moveable
         curChar = GetCharFromPosition( (pnt_CurX - 1),(pnt_CurY) );
-        if ( (curChar == ' ') || (curChar == 'S') || (curChar == '$') || (curChar == '&') || (curChar == 'H')){
+        curChar2 = GetCharFromPosition( (pnt_CurX - 1),(pnt_CurY-1) );
+        if ( (curChar == ' ') || (curChar == 'S') || (curChar == '$') || (curChar == '&') || (curChar == 'H')|| (curChar == '-')){
             pts_curTile = new MapTile();
             pts_curTile.ChildXPosition = pnt_CurX;
             pts_curTile.ChildYPosition = pnt_CurY;
@@ -275,7 +300,8 @@ public class RunnerPather extends RunnerPathFind {
         }
         //Right (+x)
         curChar = GetCharFromPosition( (pnt_CurX + 1),(pnt_CurY) );
-        if ( (curChar == ' ') || (curChar == 'S') || (curChar == '$') || (curChar == '&' || (curChar == 'H'))){
+        curChar2 = GetCharFromPosition( (pnt_CurX - 1),(pnt_CurY-1) );
+        if ( (curChar == ' ') || (curChar == 'S') || (curChar == '$') || (curChar == '&') || (curChar == 'H') || (curChar == '-')){
             pts_curTile = new MapTile();
             pts_curTile.ChildXPosition = pnt_CurX;
             pts_curTile.ChildYPosition = pnt_CurY;            
