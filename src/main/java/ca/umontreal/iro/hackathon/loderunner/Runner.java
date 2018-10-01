@@ -30,12 +30,14 @@ public class Runner extends BasicRunner {
     //Variables that store the original and modified ascii maps
     public static String[] mpMapOriginal;
     public static String[] mpMapCurrent; 
-    
+    //Variables for theoretical x and y position
+    int xvTheoretical;
+    int yvTheoretical;
     
     //Variables that I did not make
     //Room name
-    public static final String ROOM = "Main125";
-    public static final int START_LEVEL = 6;
+    public static final String ROOM = "Main131";
+    public static final int START_LEVEL = 1;
     
     //Constructor from template
     public Runner() {
@@ -49,6 +51,10 @@ public class Runner extends BasicRunner {
         //First thing is to copy/save array so that it can used and modified
         mpMapOriginal = grid.clone();
         mpMapCurrent = grid.clone();
+        //Reset theoretical positions
+        RunnerMapIO MapGetterMaster = new RunnerMapIO();
+        xvTheoretical = MapGetterMaster.xvPlayerFromMap();
+        yvTheoretical = MapGetterMaster.yvPlayerFromMap();
         
         //Next code to figure out how to solve this map
         RunnerPathFind Pathfinder = new RunnerPathFind();
@@ -71,19 +77,19 @@ public class Runner extends BasicRunner {
     
     //The method that's run every move
     @Override
-    public Move next(int x, int y) {
+    public Move next(int xvReal, int yvReal) {
         
         
         //Server was ignoring inputs when sending them too fast.
         //Given I precalcualte all my moves it seems like the server cant keep
         //up.
         try {
-            TimeUnit.MILLISECONDS.sleep(500);
+            TimeUnit.MILLISECONDS.sleep(250);
         } catch (InterruptedException ex) {
             Logger.getLogger(Runner.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        System.out.println("Position du runner : (" + x + ", " + y + ")");
+        System.out.println("Position du runner : (" + xvReal + ", " + yvReal + ")");
         Direction dir = Direction.fromInt(0);
         int i=0;
         //Important lines to fix
