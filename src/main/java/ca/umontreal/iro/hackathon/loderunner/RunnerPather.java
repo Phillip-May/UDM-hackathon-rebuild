@@ -25,27 +25,7 @@ public class RunnerPather extends RunnerPathFind {
         super.mpMapCurrent = inp_StartGrid.clone();
         return 0;
     }
-
-    //Returns the character at any given point
-    public char GetCharFromPosition(int inp_x, int inp_y){
-        
-        char chr_ReturnData;
-        //Grab the correct string based on the y vlaue
-        //Make sure x and y are not out of boundsx
-        //If they are then dont return a valid character
-        //My invalid character will be lowercase z 'z'
-        chr_ReturnData = 'z';
-        
-        if ( (inp_y < super.mpMapCurrent.length) && (inp_x >= 0)){
-            String str_line = super.mpMapCurrent[inp_y];
-            //Make sure the x value is valid as well.
-            if ( (inp_x < str_line.length() ) && (inp_x >= 0)) {
-                chr_ReturnData =str_line.charAt(inp_x);    
-            }           
-        }
-        
-        return chr_ReturnData;
-    }    
+   
     
     //Class for storing map tile data
     public class MapTile {
@@ -367,7 +347,7 @@ public class RunnerPather extends RunnerPathFind {
         absoluteY = Math.abs(inp_y1-inp_y2);
         returnHValue = absoluteX+absoluteY;
         
-        super.GetDoorY();
+        super.yvDoorFromMap();
         
         return returnHValue;
     }

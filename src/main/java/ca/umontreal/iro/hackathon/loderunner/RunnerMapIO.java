@@ -15,18 +15,6 @@ import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
 
 public class RunnerMapIO extends Runner{  
-
-    //Variables
-    //The number of coins depends on the level.
-    int ceCoinCount = 0;
-    int[] rgCoinCountxv = new int[20];
-    int[] rgCoinCountyv = new int[20];
-    //Player X and Y coordinates
-    int xvPlayer = 0;
-    int yvPlayer = 0;
-    //Door X and Y coordinates
-    int xvDoor = 0;
-    int yvDoor = 0;
     
     //Class constructor
     public RunnerMapIO(){   
@@ -34,112 +22,131 @@ public class RunnerMapIO extends Runner{
     }
     
     //Functions to get data from subclass
-    public int GetDoorX(){
+    public int xvDoorFromMap(){
+        int xvDoor = xyvDoorFromMap()[0];
         return xvDoor;
     }
-    public int GetDoorY(){
+    public int yvDoorFromMap(){
+        int yvDoor = xyvDoorFromMap()[1];
         return yvDoor;
     }
     
-    public int GetPlayerX(){
+    public int xvPlayerFromMap(){
+        int xvPlayer = xyvPlayerFromMap()[0];
         return xvPlayer;
     }
     
-    public int GetPlayerY(){
+    public int yvPlayerFromMap(){
+        int yvPlayer = xyvPlayerFromMap()[1];
         return yvPlayer;
     }
     
-    public int[] GetCoinX(){
-        return rgCoinCountxv;
+    public int[] rgxvCoinsFromMap(){
+        ArrayList<Integer> temp;
+        temp =  xypCoinsFromMap().get(0);
+        //Stupid conversion
+        int[] rgxvCoinCount = new int[temp.size()];
+        for (int i=0; i < rgxvCoinCount.length; i++)
+        {
+            rgxvCoinCount[i] = temp.get(i).intValue();
+        }
+        return rgxvCoinCount;
     }
     
-    public int[] GetCoinY(){
-        return rgCoinCountyv;
+    public int[] rgyvCoinsFromMap(){
+        ArrayList<Integer> temp;
+        temp =  xypCoinsFromMap().get(1);
+        //Stupid conversion
+        int[] rgyvCoinCount = new int[temp.size()];
+        for (int i=0; i < rgyvCoinCount.length; i++)
+        {
+            rgyvCoinCount[i] = temp.get(i).intValue();
+        }
+        return rgyvCoinCount;        
     }
-    public int GetCoinAmount(){
-        return ceCoinCount;
+    public int iCoinsFromMap(){
+        int ceCoinCount;
+        ceCoinCount = xypCoinsFromMap().get(0).size();
+        //For some reason my other code relies on this being wrong
+        return ceCoinCount-1;
     }
     
     
-    //Function to calculate al the stuff for the getter functions
-    public int FindStuff(){
-        FindCoinCoords();
-        FindPlayerCoords();
-        FindDoorCoords();
+    //Returns the character at any given point
+    public char GetCharFromPosition(int inp_x, int inp_y){
         
-        return 0;
-    }
+        char chr_ReturnData;
+        //Grab the correct string based on the y vlaue
+        //Make sure x and y are not out of boundsx
+        //If they are then dont return a valid character
+        //My invalid character will be lowercase z 'z'
+        chr_ReturnData = 'z';
+        
+        if ( (inp_y < super.mpMapCurrent.length) && (inp_x >= 0)){
+            String str_line = super.mpMapCurrent[inp_y];
+            //Make sure the x value is valid as well.
+            if ( (inp_x < str_line.length() ) && (inp_x >= 0)) {
+                chr_ReturnData =str_line.charAt(inp_x);    
+            }           
+        }
+        
+        return chr_ReturnData;
+    } 
 
-    public int FindCoinCoords() {
-        ceCoinCount = 0;
+    public ArrayList<ArrayList<Integer>> xypCoinsFromMap() {
         //Populates the array called pts_CoinCoords
         //Debug prints
+        ArrayList< ArrayList<Integer> > xypCoins;
+        xypCoins = new ArrayList<>();
+        ArrayList<Integer> xvpCoins = new ArrayList<Integer>();
+        ArrayList<Integer> yvpCoins = new ArrayList<Integer>();
         
         for (int i=0; i<super.mpMapCurrent.length; i++) {
             String str_line = super.mpMapCurrent[i];
             for (int j = 0; j < str_line.length(); j++){
                 int cur_char = str_line.charAt(j);
                 if (cur_char == '$') {
-                    rgCoinCountxv[ceCoinCount] = j;
-                    rgCoinCountyv[ceCoinCount] = i;
-                    ceCoinCount++;
+                    xvpCoins.add(j);
+                    yvpCoins.add(i);
                 }
             }
             System.out.println(str_line);
         }
-        //Decrement coint count so it reflects the number of coins found.
-        ceCoinCount--;
-        System.out.println("X and y coordinates of coins");
-        System.out.println("X coords");
-        System.out.println(java.util.Arrays.toString(rgCoinCountxv));
-        System.out.println("Y Coords");
-        System.out.println(java.util.Arrays.toString(rgCoinCountyv));
-        
-        return 0;
+        xypCoins.add(xvpCoins);
+        xypCoins.add(yvpCoins);
+        return xypCoins;
     }    
 
-    public int FindPlayerCoords() {
-
+    public int[] xyvPlayerFromMap() {
+        int xyvPoint[] = new int[2];
         for (int i=0; i<super.mpMapCurrent.length; i++) {
             String str_line = super.mpMapCurrent[i];
             for (int j = 0; j < str_line.length(); j++){
                 int cur_char = str_line.charAt(j);
                 if (cur_char == '&') {
-                    xvPlayer = j;
-                    yvPlayer = i;
+                    xyvPoint[0] = j;
+                    xyvPoint[1] = i;
                 }
             }
             System.out.println(str_line);
-        }         
-        System.out.println("X and y coordinates of player");
-        System.out.println("X coords");
-        System.out.println(xvPlayer);
-        System.out.println("Y Coords");
-        System.out.println(yvPlayer);
-        
-        return 0;
+        }
+        return xyvPoint;
     }
     
-    public int FindDoorCoords() {
-
+    //Returns a an array with the x and y values of the doors position
+    public int[] xyvDoorFromMap() {
+        int xyvPoint[] = new int[2];
         for (int i=0; i<super.mpMapCurrent.length; i++) {
             String str_line = super.mpMapCurrent[i];
             for (int j = 0; j < str_line.length(); j++){
                 int cur_char = str_line.charAt(j);
                 if (cur_char == 'S') {
-                    xvDoor = j;
-                    yvDoor = i;
+                    xyvPoint[0] = j;
+                    xyvPoint[1] = i;
                 }
             }
-            System.out.println(str_line);
-        }         
-        System.out.println("X and y coordinates of Door");
-        System.out.println("X coords");
-        System.out.println(xvDoor);
-        System.out.println("Y Coords");
-        System.out.println(yvDoor);
-        
-        return 0;
+        }
+        return xyvPoint;
     }
     
     

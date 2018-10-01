@@ -62,20 +62,16 @@ public class RunnerPathFind extends RunnerMapIO {
     }    
     
     public int PathFind() {
-        //Create subclasses
-        RunnerMapIO MapGetter = new RunnerMapIO();
         MapPToP = new RunnerPather();
 
-        //Generate data based on map data
-        MapGetter.FindStuff();
         //Grab variables from sub class
-        num_DoorX = MapGetter.GetDoorX();
-        num_DoorY = MapGetter.GetDoorY();
-        num_PlayerX = MapGetter.GetPlayerX();
-        num_PlayerY = MapGetter.GetPlayerY();
-        xpt_CoinXPos = MapGetter.GetCoinX();
-        ypt_CoinYPos = MapGetter.GetCoinY();
-        num_coincount = MapGetter.GetCoinAmount();
+        num_DoorX = xvDoorFromMap();
+        num_DoorY = yvDoorFromMap();
+        num_PlayerX = xvPlayerFromMap();
+        num_PlayerY = yvPlayerFromMap();
+        xpt_CoinXPos = rgxvCoinsFromMap();
+        ypt_CoinYPos = rgyvCoinsFromMap();
+        num_coincount = iCoinsFromMap();
         
         //Test path finding
         //MapPToP.FindTurnsTwoPoints(num_PlayerX,num_PlayerY,num_DoorX,num_DoorY);
