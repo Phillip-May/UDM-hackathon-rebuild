@@ -36,7 +36,15 @@ public class RunnerPathFind extends RunnerMapIO {
 
         
         //Test path finding
-        //MapPToP.FindTurnsTwoPoints(8,2,21,5);
+        /*
+        int temp1 = xvPlayerFromMap();
+        int temp2 = yvPlayerFromMap();
+        int temp3 = xvDoorFromMap();
+        int temp4 = yvDoorFromMap();
+        int temp5 = 0;
+        
+        temp5 = MapPToP.GetTurnsTwoPoints(temp1,temp2,temp3,temp4);
+        */
         //MapPToP.FindTurnsTwoPoints(15,5,12,5);
         
         
@@ -150,12 +158,6 @@ public class RunnerPathFind extends RunnerMapIO {
         System.out.println(ipEnumeratedIndexes);
         cBestTotalTurns = 1000;
         for (int k= 0; k < ipEnumeratedIndexes.size(); k++) {
-            iComparisonCoin = ipEnumeratedIndexes.get(k).get(ceCoins-1);
-            if (iComparisonCoin != iBestCoin) {
-                //If last element is not coin closest to do don't bother
-                //Check other possible routes
-                continue;
-            }
             cCurrentTotalTurns = 0;
             rgiCurrentCombination = ipEnumeratedIndexes.get(k);
             for (int j = 0; j < (rgiCurrentCombination.size() ); j++){

@@ -30,7 +30,6 @@ public class RunnerWalkableTiles extends RunnerPathFind{
         curHValue = hValueEstimation(1,1,6,6);
         char curChar;
         char curChar2;
-
         
         //Up
         fTemp = fTileUpWalkable(pnt_CurX,pnt_CurY,destX,destY);
@@ -96,7 +95,25 @@ public class RunnerWalkableTiles extends RunnerPathFind{
             pts_curTile.hValue = curHValue;            
             //Add it to the array list
             pts_AdjacentTiles.add(pts_curTile);
-        }         
+        }
+        //Diagonal left
+        fTemp = fTileDownDigonaleLeft(pnt_CurX,pnt_CurY,destX,destY);
+        if ( fTemp == true ){
+            //This may require adding two tiles to the adjcent list
+            pts_curTile = new MapTile();
+            pts_curTile.fDigSquareLeft = true;
+            pts_curTile.ChildXPosition = pnt_CurX;
+            pts_curTile.ChildYPosition = pnt_CurY;            
+            pts_curTile.xposition = (pnt_CurX-1);
+            pts_curTile.yposition = (pnt_CurY+1);
+            pts_curTile.gValue = (pnt_CurG+3);
+            //hValue estimation (a^2+b^2=c^2)
+            curHValue = hValueEstimation(pnt_CurX-1,pnt_CurY+1,destX,destY);            
+            //Save HValue
+            pts_curTile.hValue = curHValue;
+            //Add it to the array list
+            pts_AdjacentTiles.add(pts_curTile);
+        }
         
         return pts_AdjacentTiles;
     }    
@@ -279,6 +296,46 @@ public class RunnerWalkableTiles extends RunnerPathFind{
         
         return fReturnValue;
     }
+    
+    public boolean fTileDownDigonaleLeft(int inp_x1,int inp_y1, 
+                                      int destX, int destY) {
+        boolean fReturnValue;
+        fReturnValue = false;
+        char chCur;
+        char ch1Down;
+        char ch1Left;
+        char ch1Left1Down;
+        
+        chCur = GetCharFromPosition( (inp_x1),(inp_y1) );
+        ch1Down = GetCharFromPosition( (inp_x1),(inp_y1+1) );
+        ch1Left = GetCharFromPosition( (inp_x1-1),(inp_y1) ); 
+        ch1Left1Down = GetCharFromPosition( (inp_x1-1),(inp_y1+1) );
+        
+        System.out.println("chCur:" +chCur);
+        System.out.println("ch1Down:" +ch1Down);
+        System.out.println("ch1Left:" +ch1Left);
+        System.out.println("ch1Left1Down:" +ch1Left1Down);
+        
+        //g cost needs to be 3 to account for breaking
+        //Pretty obvious tile has to be diggable
+        if (ch1Left1Down =='#') {
+        //Character above has to be walkable
+            if ( ((ch1Left == ' ') || (ch1Left == 'S') || (ch1Left == '$') || (ch1Left == '&') || (ch1Left == 'H') || (ch1Left == '-'))){
+                //Character below you has to be standable
+                if ( ((ch1Down == '@') || (ch1Down == '#') || (ch1Down == 'H') || (ch1Down == '-'))){
+                    //Character where you are is walkable by nature of being checked
+                    fReturnValue = true;
+                }
+            }
+            //If the tile above is digable repeat this process
+            else if (ch1Left == '#'){
+                fReturnValue = false;
+            }
+        }
+       
+        
+        return fReturnValue;
+    }    
     
     
     public int hValueEstimation(int inp_x1,int inp_y1,int inp_x2,int inp_y2){

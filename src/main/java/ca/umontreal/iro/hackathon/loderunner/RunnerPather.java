@@ -108,7 +108,7 @@ public class RunnerPather extends RunnerWalkableTiles {
         } while(pts_OpenList.isEmpty() == false);
         //Check if it found a path of stop trying
         if (foundapath == false){
-            System.out.println("Shit went wrong.");
+            System.out.println("Failed to find path with parameters:.");
             System.out.println("Path find start x and y");
             System.out.println(inp_x1);
             System.out.println(inp_y1);
@@ -144,6 +144,7 @@ public class RunnerPather extends RunnerWalkableTiles {
         ArrayList<Integer> ReturnedList = new ArrayList<Integer>();
         ArrayList<MapTile> SolvedListSimple = new ArrayList<MapTile>();
         int lastx,lasty,nextx,nexty;
+        boolean fTileDig;
         //First simplify the list by going from last point to first pont        
         int closedsize = pts_ClosedList.size();
         int j = pts_ClosedList.size();
@@ -153,7 +154,7 @@ public class RunnerPather extends RunnerWalkableTiles {
         ind_nextTile = TileListContainsXYAT(pts_ClosedList,inp_x2,inp_y2);
         SolvedListSimple.add( pts_ClosedList.get(ind_nextTile) );
         
-        //Check if the array was of size (start and end where the same)
+        //Check if the array was of size 0 (start and end where the same)
         if (ind_nextTile == 0){
             return ReturnedList;
         }
@@ -164,15 +165,12 @@ public class RunnerPather extends RunnerWalkableTiles {
         nextx = pts_ClosedList.get(closedsize-1).xposition;      
         nexty = pts_ClosedList.get(closedsize-1).yposition;           
         ind_nextTile = TileListContainsXYAT(pts_ClosedList,lastx,lasty);
+        int tempg1;
+        int tempg2;
         while ( (nextx != inp_x1) || (nexty != inp_y1) ){
-            if (pts_ClosedList.get(ind_nextTile).gValue == (cur_gvalue - 1) ){
-                SolvedListSimple.add( pts_ClosedList.get(ind_nextTile) );
-            }
-            else {
-                //Try again if not correct gvalue?
-                System.out.println("Shit went wrong after sorting.");
-                continue;                
-            }
+            //G check is no longer applicable, closed list should only have
+            //one instance of each x y anyway.
+            SolvedListSimple.add( pts_ClosedList.get(ind_nextTile) );
             nextx = pts_ClosedList.get(ind_nextTile).ChildXPosition;      
             nexty = pts_ClosedList.get(ind_nextTile).ChildYPosition;
             cur_gvalue = pts_ClosedList.get(ind_nextTile).gValue;
@@ -193,8 +191,18 @@ public class RunnerPather extends RunnerWalkableTiles {
             lasty = SolvedListSimple.get(i).yposition;
             nextx = SolvedListSimple.get(i-1).xposition;
             nexty = SolvedListSimple.get(i-1).yposition;
+            fTileDig = SolvedListSimple.get(i-1).fDigSquareLeft;
+            //Check if this a dig step
+            if (fTileDig == true){
+                //Breakpoint
+                fTileDig = fTileDig;
+                //Add a dig left, a left and a down
+                ReturnedList.add(DIGLEFT);
+                ReturnedList.add(LEFT);
+                ReturnedList.add(DOWN);
+            }
             //Up
-            if (nexty < lasty){
+            else if (nexty < lasty){
                 ReturnedList.add(UP);
             }
             //Down

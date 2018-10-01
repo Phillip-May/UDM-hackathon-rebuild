@@ -20,8 +20,14 @@ public class Runner extends BasicRunner {
     public static final int DOWN = 3;
     public static final int RIGHT = 4;
     public static final int DIGLEFT = 5;
-    public static final int DIGRIGHT = 5;
+    public static final int DIGRIGHT = 6;
     public static final int ERROR = -1;
+    //Symbolic constants used in moving pre simplification
+    public static final int LADDERWALLDIGLEFT = 10;
+    public static final int LADDERWALLDIGRIGHT = 11;
+    public static final int DOWNWALLDIGLEFT = 20;
+    public static final int DOWNWALLDIGRIGHT = 21;
+    
         
     //Variable for current position in list of moves
     public static int iFinalMoves;
@@ -37,7 +43,7 @@ public class Runner extends BasicRunner {
     //Variables that I did not make
     //Room name
     public static final String ROOM = "Main131";
-    public static final int START_LEVEL = 1;
+    public static final int START_LEVEL = 6;
     
     //Constructor from template
     public Runner() {
@@ -78,13 +84,13 @@ public class Runner extends BasicRunner {
     //The method that's run every move
     @Override
     public Move next(int xvReal, int yvReal) {
-        
-        
+        //Determine the event that occurs
+        Move returnedMove;
         //Server was ignoring inputs when sending them too fast.
         //Given I precalcualte all my moves it seems like the server cant keep
         //up.
         try {
-            TimeUnit.MILLISECONDS.sleep(250);
+            TimeUnit.MILLISECONDS.sleep(249);
         } catch (InterruptedException ex) {
             Logger.getLogger(Runner.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -94,10 +100,20 @@ public class Runner extends BasicRunner {
         int i=0;
         //Important lines to fix
         if (iFinalMoves<=(mvsFinalMoves.size()-1)){
-            dir = Direction.fromInt(mvsFinalMoves.get(iFinalMoves));
+            //Check if dig command is embeded
+            int temp = mvsFinalMoves.get(iFinalMoves);
+            if (temp == DIGLEFT){
+                dir = dir.LEFT;
+                returnedMove = new Move(Event.DIG, dir);
+            }
+            else{
+                dir = Direction.fromInt(mvsFinalMoves.get(iFinalMoves));
+                returnedMove = new Move(Event.MOVE, dir);
+            }
         }
         else {
             dir = Direction.fromInt((int) (0));
+            returnedMove = new Move(Event.MOVE, dir);
         }
         //int direction = (int) (Math.random() * 4 + 1);
         //Direction dir = Direction.fromInt(direction);
@@ -105,7 +121,7 @@ public class Runner extends BasicRunner {
         System.out.println("Last move executed");
         System.out.println(iFinalMoves);
         iFinalMoves++;
-        return new Move(Event.MOVE, dir);
+        return returnedMove;
     }
 
 }
