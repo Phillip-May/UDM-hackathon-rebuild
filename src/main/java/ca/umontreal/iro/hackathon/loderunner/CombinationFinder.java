@@ -4,7 +4,7 @@ import java.util.ArrayList;
  *
  * @author Admin123
  */
-public class CombinationFinder extends Runner {
+public class CombinationFinder {
     // a is the original array
     // k is the number of elements in each permutation
     public static ArrayList<ArrayList<Integer>> choose(ArrayList<Integer> a, int k) {
@@ -41,26 +41,4 @@ public class CombinationFinder extends Runner {
         a.set(j, temp);
     }
 
-
-    // sample client
-    public static void main(String[] args) {
-
-      // n is the end item of the array.
-        // if n = 5, the array is [0, 1, 2, 3, 4, 5]
-        // k is the number of elements of each permutation.
-        int n =5;
-        int k =3;
-
-      // create original array
-        ArrayList<Integer> elements = new ArrayList<> ();
-        for (int i =0; i < n; i ++){
-            elements.add(i);
-        }
-
-      ArrayList<Integer> a = new ArrayList<> ();
-        for (int i = 0; i < n; i ++){
-            a.add(elements.get(i));
-        }
-        System.out.println(choose(a, k));
-    }
 }

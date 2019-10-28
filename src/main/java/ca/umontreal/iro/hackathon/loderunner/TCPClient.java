@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 
 public class TCPClient {
 
-    private static final String IP = "192.168.0.187";
+    private static final String IP = "192.168.56.101";
     private static final int PORT = 1337;
 
     private Socket clientSocket;

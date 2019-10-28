@@ -22,9 +22,17 @@ package ca.umontreal.iro.hackathon.loderunner;
         //The tile from which this one was accessed
         int ChildXPosition = -1;
         int ChildYPosition = -1;
-        //Special flag to specify if a tile needs to be dug
+        //Special flags to specify if a tile needs to be dug
         boolean fDigSquareLeft = false;
         boolean fDigSquareRight = false;
+        boolean fDoubleDigSquareLeft = false;
+        boolean fDoubleDigSquareRight = false;
+        boolean fDigStraightLeft = false;
+        boolean fDigStraightRight = false;
+        
+        int fWallDigLeftCoinOffset = 0;
+        int fWallDigRightCoinOffset = 0;
+        
         
         
         public int GetfValue(){
